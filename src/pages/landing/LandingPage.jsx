@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../features/auth/AuthContext';
+import { useLanguage } from '../../lib/i18n/LanguageContext';
 import { CourseCard } from '../../features/courses/CourseCard';
 import { dataService } from '../../services/dataService';
 import { Button } from '../../components/ui/Button';
@@ -23,6 +24,7 @@ import {
 
 export function LandingPage() {
   const { isAuthenticated, role } = useAuth();
+  const { t } = useLanguage();
   const [courses, setCourses] = useState([]);
   const [activeFaq, setActiveFaq] = useState(null);
   const navigate = useNavigate();
@@ -47,20 +49,20 @@ export function LandingPage() {
 
   const faqs = [
     {
-      q: 'Do I need prior coding experience to begin?',
-      a: 'Not at all! DevAcademy Pro features structured tracks ranging from absolute beginner fundamentals (HTML, CSS, JavaScript) to advanced React architecture and algorithms.',
+      q: t('faq.q1', 'Boshlash uchun menda oldindan dasturlash tajribasi kerakmi?'),
+      a: t('faq.a1', "Umuman yo'q! DevAcademy Pro noldan boshlovchilar uchun maxsus tuzilgan yo'nalishlarga ega (HTML, CSS, JavaScript) va bosqichma-bosqich rivojlantiradi."),
     },
     {
-      q: 'How does the AI Coding Mentor work?',
-      a: 'The AI Mentor observes your active code in the playground, diagnoses runtime bugs, explains abstract programming concepts in plain English, and provides immediate hints without giving away the full answer.',
+      q: t('faq.q2', 'AI Coding Mentor qanday yordam beradi?'),
+      a: t('faq.a2', "AI-ustoz kodingizdagi xatoliklarni tahlil qiladi, tushunarsiz tushunchalarni oson tilda izohlaydi va yechim topish uchun maslahatlar beradi."),
     },
     {
-      q: 'Are quizzes and assignments graded automatically?',
-      a: 'Quizzes are graded instantaneously with detailed pedagogical explanations. Assignments allow you to submit browser code directly to your instructor for customized scoring and feedback.',
+      q: t('faq.q3', 'Testlar va amaliy topshiriqlar qanday tekshiriladi?'),
+      a: t('faq.a3', "Testlar bir zumda avtomatik tekshirilib, xatolar tushuntiriladi. Katta vazifalar esa o'qituvchilar tomonidan batafsil ko'rib chiqiladi."),
     },
     {
-      q: 'Can instructors create and manage their own curriculum?',
-      a: 'Yes! Instructors have access to a dedicated Teacher Dashboard where they can publish courses, write lessons, assign coding challenges, and monitor student progress.',
+      q: t('faq.q4', "O'qituvchilar o'z kurslarini yarata oladimi?"),
+      a: t('faq.a4', "Ha! O'qituvchilar uchun maxsus kabinet mavjud bo'lib, unda darslar qo'shish, testlar tuzish va talabalar natijalarini kuzatish mumkin."),
     },
   ];
 
@@ -74,19 +76,19 @@ export function LandingPage() {
         <div className="text-center space-y-6 max-w-3xl mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-100/80 border border-brand-200 text-brand-800 text-xs font-semibold shadow-sm animate-in fade-in slide-in-from-top-3">
             <Sparkles className="w-4 h-4 text-brand-600" />
-            <span>Interactive AI-Powered Software Engineering Platform</span>
+            <span>{t('hero.badge', 'Interactive AI-Powered Software Engineering Platform')}</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.15]">
-            Learn to Code.{' '}
+            {t('hero.title1', 'Learn to Code.')}{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-violet-600 to-indigo-600">
-              Build Real Projects.
+              {t('hero.titleGradient', 'Build Real Projects.')}
             </span>{' '}
-            Grow Faster.
+            {t('hero.title2', 'Grow Faster.')}
           </h1>
 
           <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            DevAcademy Pro blends hands-on in-browser coding playgrounds, personalized AI mentorship, comprehensive interactive courses, and industry-grade assignments to accelerate your career.
+            {t('hero.subtitle', 'DevAcademy Pro blends hands-on in-browser coding playgrounds, personalized AI mentorship, comprehensive interactive courses, and industry-grade assignments to accelerate your career.')}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
@@ -98,11 +100,11 @@ export function LandingPage() {
               iconPosition="right"
               className="w-full sm:w-auto shadow-lg shadow-brand-500/25"
             >
-              Start Learning
+              {t('hero.startFree', 'Start Learning Free')}
             </Button>
             <Link to="/courses" className="w-full sm:w-auto">
               <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                Explore Courses
+                {t('hero.browseCatalog', 'Explore Courses')}
               </Button>
             </Link>
           </div>
@@ -184,19 +186,27 @@ export function LandingPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white rounded-2xl p-8 border border-slate-200/80 shadow-card">
           <div className="text-center space-y-1">
             <p className="text-3xl sm:text-4xl font-extrabold text-brand-600">12,500+</p>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Students</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              {t('hero.statsStudents', 'Active Students')}
+            </p>
           </div>
           <div className="text-center space-y-1">
             <p className="text-3xl sm:text-4xl font-extrabold text-slate-900">98.4%</p>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Course Completion</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              {t('hero.statsCompletion', 'Course Completion')}
+            </p>
           </div>
           <div className="text-center space-y-1">
             <p className="text-3xl sm:text-4xl font-extrabold text-brand-600">45,000+</p>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Code Runs Daily</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              {t('hero.runCode', 'Code Runs Daily')}
+            </p>
           </div>
           <div className="text-center space-y-1">
             <p className="text-3xl sm:text-4xl font-extrabold text-slate-900">4.9 / 5.0</p>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Student Rating</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              {t('hero.statsInstructors', 'Student Rating')}
+            </p>
           </div>
         </div>
       </section>
@@ -206,18 +216,18 @@ export function LandingPage() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <Badge variant="violet" size="md" className="mb-2">
-              Curated Curriculum
+              {t('nav.courses', 'Curated Curriculum')}
             </Badge>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Featured Programming Courses
+              {t('courses.catalogTitle', 'Featured Programming Courses')}
             </h2>
             <p className="text-sm text-slate-500 mt-1">
-              Start with fundamentals or dive deep into production-grade full-stack patterns.
+              {t('courses.catalogSubtitle', 'Start with fundamentals or dive deep into production-grade full-stack patterns.')}
             </p>
           </div>
           <Link to="/courses">
             <Button variant="outline" size="sm" icon={ArrowRight} iconPosition="right">
-              View All Courses
+              {t('dashboard.viewAll', 'View All Courses')}
             </Button>
           </Link>
         </div>
@@ -233,13 +243,13 @@ export function LandingPage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <Badge variant="emerald" size="md">
-            Built for Modern Engineers
+            DevAcademy Pro
           </Badge>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Everything You Need to Master Software Engineering
+            {t('features.title', 'Everything You Need to Master Software Engineering')}
           </h2>
           <p className="text-sm text-slate-500">
-            Traditional tutorials leave you passive. DevAcademy Pro forces you to build, debug, and understand every single line.
+            {t('features.subtitle', 'All the tools you need to master modern software development in one place.')}
           </p>
         </div>
 
@@ -248,9 +258,9 @@ export function LandingPage() {
             <div className="w-12 h-12 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center">
               <Terminal className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900">Isolated Browser Sandbox</h3>
+            <h3 className="text-lg font-bold text-slate-900">{t('features.f1Title', 'Isolated Browser Sandbox')}</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Write HTML, modern CSS, and JavaScript with instantaneous live preview and interactive console debugging directly in Monaco editor.
+              {t('features.f1Desc', 'Write HTML, modern CSS, and JavaScript with instantaneous live preview.')}
             </p>
           </div>
 
@@ -258,9 +268,9 @@ export function LandingPage() {
             <div className="w-12 h-12 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center">
               <Sparkles className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900">AI Coding Mentorship</h3>
+            <h3 className="text-lg font-bold text-slate-900">{t('features.f2Title', 'AI Coding Mentorship')}</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Get contextual code explanations, bug diagnoses, and performance recommendations from an intelligent tutor that never sleeps.
+              {t('features.f2Desc', 'Get contextual code explanations, bug diagnoses, and performance hints.')}
             </p>
           </div>
 
@@ -268,9 +278,9 @@ export function LandingPage() {
             <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
               <Award className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900">Gamified Progression</h3>
+            <h3 className="text-lg font-bold text-slate-900">{t('features.f3Title', 'Gamified Progression')}</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Earn XP for every lesson, maintain daily learning streaks, unlock achievement badges, and climb the platform leaderboard.
+              {t('features.f3Desc', 'Earn XP for every lesson, maintain daily learning streaks, and climb the leaderboard.')}
             </p>
           </div>
         </div>
@@ -401,11 +411,14 @@ export function LandingPage() {
       <section id="faq" className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center space-y-2">
           <Badge variant="slate" size="md">
-            Have Questions?
+            {t('faq.badge', 'Savol-javoblar')}
           </Badge>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-            Frequently Asked Questions
+            {t('faq.title', "Ko'p beriladigan savol-javoblar")}
           </h2>
+          <p className="text-sm text-slate-500">
+            {t('faq.subtitle', "Platforma va o'qish jarayoni bo'yicha eng muhim ma'lumotlar")}
+          </p>
         </div>
 
         <div className="space-y-3">
@@ -443,10 +456,10 @@ export function LandingPage() {
         <div className="bg-gradient-to-r from-brand-900 via-brand-800 to-navy-950 rounded-3xl p-8 sm:p-14 text-white text-center space-y-6 shadow-2xl relative overflow-hidden">
           <div className="max-w-2xl mx-auto space-y-4 relative z-10">
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-              Ready to Accelerate Your Software Engineering Journey?
+              {t('hero.title1', 'Learn to Code.')} {t('hero.titleGradient', 'Build Real Projects.')}
             </h2>
             <p className="text-sm sm:text-base text-brand-200">
-              Join thousands of students mastering modern web development, algorithms, and AI tools with DevAcademy Pro today.
+              {t('hero.subtitle', 'DevAcademy Pro blends hands-on coding playgrounds, personalized AI mentorship, and industry-grade assignments to accelerate your career.')}
             </p>
             <div className="pt-2 flex flex-col sm:flex-row justify-center gap-3">
               <Button
@@ -455,7 +468,7 @@ export function LandingPage() {
                 onClick={handleStartLearning}
                 className="bg-white text-brand-900 hover:bg-slate-100 shadow-xl"
               >
-                Get Started for Free
+                {t('hero.startFree', 'Get Started for Free')}
               </Button>
             </div>
           </div>

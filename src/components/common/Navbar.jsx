@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../features/auth/AuthContext';
+import { useLanguage } from '../../lib/i18n/LanguageContext';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import {
@@ -19,6 +21,7 @@ import {
 
 export function Navbar() {
   const { user, profile, role, isAuthenticated, logout } = useAuth();
+  const { t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const navigate = useNavigate();
@@ -48,7 +51,7 @@ export function Navbar() {
               DevAcademy<span className="text-brand-600 ml-0.5">Pro</span>
             </span>
             <span className="text-[10px] text-slate-400 font-medium -mt-1 tracking-wider uppercase">
-              AI Code Academy
+              {t('nav.subtitle', 'AI Code Academy')}
             </span>
           </div>
         </Link>
@@ -60,14 +63,14 @@ export function Navbar() {
             className="text-sm font-medium text-slate-600 hover:text-brand-600 transition flex items-center gap-1.5"
           >
             <BookOpen className="w-4 h-4" />
-            <span>Courses</span>
+            <span>{t('nav.courses', 'Courses')}</span>
           </Link>
           <Link
             to="/student/playground"
             className="text-sm font-medium text-slate-600 hover:text-brand-600 transition flex items-center gap-1.5"
           >
             <Terminal className="w-4 h-4" />
-            <span>Playground</span>
+            <span>{t('nav.playground', 'Playground')}</span>
           </Link>
           {isAuthenticated && (
             <Link
@@ -75,13 +78,16 @@ export function Navbar() {
               className="text-sm font-semibold text-brand-700 bg-brand-50 px-3 py-1.5 rounded-lg border border-brand-200/60 hover:bg-brand-100 transition flex items-center gap-1.5"
             >
               <LayoutDashboard className="w-4 h-4" />
-              <span>Dashboard</span>
+              <span>{t('nav.dashboard', 'Dashboard')}</span>
             </Link>
           )}
         </nav>
 
         {/* Right CTA / Auth controls */}
         <div className="hidden md:flex items-center gap-3">
+          {/* Language Switcher */}
+          <LanguageSwitcher />
+
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
               {/* Gamification stats pill */}
@@ -135,7 +141,7 @@ export function Navbar() {
                       className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-brand-600"
                     >
                       <LayoutDashboard className="w-4 h-4" />
-                      <span>My Dashboard</span>
+                      <span>{t('nav.myDashboard', 'My Dashboard')}</span>
                     </Link>
 
                     {role === 'student' && (
@@ -146,7 +152,7 @@ export function Navbar() {
                           className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-brand-600"
                         >
                           <BookOpen className="w-4 h-4" />
-                          <span>My Enrolled Courses</span>
+                          <span>{t('nav.myCourses', 'My Enrolled Courses')}</span>
                         </Link>
                         <Link
                           to="/student/achievements"
@@ -154,7 +160,7 @@ export function Navbar() {
                           className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-brand-600"
                         >
                           <Award className="w-4 h-4" />
-                          <span>Badges & Leaderboard</span>
+                          <span>{t('nav.achievements', 'Badges & Leaderboard')}</span>
                         </Link>
                       </>
                     )}
@@ -165,7 +171,7 @@ export function Navbar() {
                         className="w-full flex items-center gap-2 px-4 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 transition"
                       >
                         <LogOut className="w-4 h-4" />
-                        <span>Sign Out</span>
+                        <span>{t('nav.logout', 'Sign Out')}</span>
                       </button>
                     </div>
                   </div>
@@ -176,25 +182,29 @@ export function Navbar() {
             <>
               <Link to="/login">
                 <Button variant="ghost" size="sm">
-                  Log in
+                  {t('nav.login', 'Log in')}
                 </Button>
               </Link>
               <Link to="/register">
                 <Button variant="primary" size="sm">
-                  Start Learning
+                  {t('nav.startLearning', 'Start Learning')}
                 </Button>
               </Link>
             </>
           )}
         </div>
 
-        {/* Mobile menu trigger */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100"
-        >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        {/* Mobile controls */}
+        <div className="md:hidden flex items-center gap-2">
+          <LanguageSwitcher />
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-xl text-slate-600 hover:bg-slate-100"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Drawer */}
@@ -205,14 +215,14 @@ export function Navbar() {
             onClick={() => setMobileMenuOpen(false)}
             className="block text-sm font-medium text-slate-700 py-2 border-b border-slate-100"
           >
-            Courses Catalog
+            {t('nav.courses', 'Courses Catalog')}
           </Link>
           <Link
             to="/student/playground"
             onClick={() => setMobileMenuOpen(false)}
             className="block text-sm font-medium text-slate-700 py-2 border-b border-slate-100"
           >
-            Code Playground
+            {t('nav.playground', 'Code Playground')}
           </Link>
           {isAuthenticated ? (
             <>
@@ -221,7 +231,7 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block text-sm font-semibold text-brand-600 py-2 border-b border-slate-100"
               >
-                Go to {role.toUpperCase()} Dashboard
+                {t('nav.dashboard', 'Dashboard')} ({role.toUpperCase()})
               </Link>
               <button
                 onClick={() => {
@@ -230,19 +240,19 @@ export function Navbar() {
                 }}
                 className="w-full text-left text-sm font-medium text-rose-600 py-2"
               >
-                Sign Out
+                {t('nav.logout', 'Sign Out')}
               </button>
             </>
           ) : (
             <div className="pt-2 flex flex-col gap-2">
               <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="outline" className="w-full">
-                  Log in
+                  {t('nav.login', 'Log in')}
                 </Button>
               </Link>
               <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="primary" className="w-full">
-                  Start Learning
+                  {t('nav.startLearning', 'Start Learning')}
                 </Button>
               </Link>
             </div>

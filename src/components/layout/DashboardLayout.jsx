@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../features/auth/AuthContext';
-import { RoleSwitchBanner } from '../common/RoleSwitchBanner';
+import { useLanguage } from '../../lib/i18n/LanguageContext';
+import { LanguageSwitcher } from '../common/LanguageSwitcher';
 import {
   Code2,
   LayoutDashboard,
@@ -25,6 +26,7 @@ import { Badge } from '../ui/Badge';
 
 export function DashboardLayout() {
   const { role, profile, logout } = useAuth();
+  const { t } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -35,43 +37,45 @@ export function DashboardLayout() {
 
   // Student Navigation Items
   const studentLinks = [
-    { name: 'Dashboard', to: '/student/dashboard', icon: LayoutDashboard },
-    { name: 'My Courses', to: '/student/my-courses', icon: BookOpen },
-    { name: 'Coding Playground', to: '/student/playground', icon: Terminal },
-    { name: 'Assignments', to: '/student/assignments', icon: FileCheck },
-    { name: 'Quizzes', to: '/student/quizzes', icon: HelpCircle },
-    { name: 'Learning Progress', to: '/student/progress', icon: TrendingUp },
-    { name: 'Badges & XP', to: '/student/achievements', icon: Award },
+    { name: t('dashboard.overview', 'Dashboard'), to: '/student/dashboard', icon: LayoutDashboard },
+    { name: t('dashboard.myCourses', 'My Courses'), to: '/student/my-courses', icon: BookOpen },
+    { name: t('dashboard.playground', 'Coding Playground'), to: '/student/playground', icon: Terminal },
+    { name: t('dashboard.assignments', 'Assignments'), to: '/student/assignments', icon: FileCheck },
+    { name: t('dashboard.quizzes', 'Quizzes'), to: '/student/quizzes', icon: HelpCircle },
+    { name: t('dashboard.recentProgress', 'Learning Progress'), to: '/student/progress', icon: TrendingUp },
+    { name: t('dashboard.achievements', 'Badges & XP'), to: '/student/achievements', icon: Award },
   ];
 
   // Teacher Navigation Items
   const teacherLinks = [
-    { name: 'Teacher Overview', to: '/teacher/dashboard', icon: LayoutDashboard },
-    { name: 'Manage Courses', to: '/teacher/courses', icon: BookOpen },
-    { name: 'Lesson Content', to: '/teacher/lessons', icon: Terminal },
-    { name: 'Assignments', to: '/teacher/assignments', icon: FileCheck },
-    { name: 'Student Submissions', to: '/teacher/submissions', icon: Award },
-    { name: 'Enrolled Students', to: '/teacher/students', icon: Users },
+    { name: t('dashboard.overview', 'Teacher Overview'), to: '/teacher/dashboard', icon: LayoutDashboard },
+    { name: t('dashboard.manageCourses', 'Manage Courses'), to: '/teacher/courses', icon: BookOpen },
+    { name: t('dashboard.lessonContent', 'Lesson Content'), to: '/teacher/lessons', icon: Terminal },
+    { name: t('dashboard.assignments', 'Assignments'), to: '/teacher/assignments', icon: FileCheck },
+    { name: t('dashboard.studentSubmissions', 'Student Submissions'), to: '/teacher/submissions', icon: Award },
+    { name: t('dashboard.enrolledStudents', 'Enrolled Students'), to: '/teacher/students', icon: Users },
   ];
 
   // Admin Navigation Items
   const adminLinks = [
-    { name: 'Admin Overview', to: '/admin/dashboard', icon: LayoutDashboard },
-    { name: 'User Management', to: '/admin/users', icon: Users },
-    { name: 'Course Moderation', to: '/admin/courses', icon: BookOpen },
-    { name: 'Platform Settings', to: '/admin/settings', icon: Settings },
+    { name: t('dashboard.adminOverview', 'Admin Overview'), to: '/admin/dashboard', icon: LayoutDashboard },
+    { name: t('dashboard.userManagement', 'User Management'), to: '/admin/users', icon: Users },
+    { name: t('dashboard.courseModeration', 'Course Moderation'), to: '/admin/courses', icon: BookOpen },
+    { name: t('dashboard.platformSettings', 'Platform Settings'), to: '/admin/settings', icon: Settings },
   ];
 
   const currentLinks =
     role === 'teacher' ? teacherLinks : role === 'admin' ? adminLinks : studentLinks;
 
   const roleLabel =
-    role === 'teacher' ? 'Instructor Portal' : role === 'admin' ? 'Admin Panel' : 'Student Workspace';
+    role === 'teacher'
+      ? t('dashboard.instructorPortal', 'Instructor Portal')
+      : role === 'admin'
+      ? t('dashboard.adminPanel', 'Admin Panel')
+      : t('dashboard.studentWorkspace', 'Student Workspace');
 
   return (
     <div className="min-h-screen bg-lavender-100 flex flex-col font-sans">
-      <RoleSwitchBanner />
-
       <div className="flex-1 flex overflow-hidden">
         {/* Mobile sidebar overlay */}
         {sidebarOpen && (
@@ -166,7 +170,7 @@ export function DashboardLayout() {
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-rose-600 hover:bg-rose-50 transition"
             >
               <LogOut className="w-4 h-4" />
-              <span>Log Out</span>
+              <span>{t('nav.logout', 'Log Out')}</span>
             </button>
           </div>
         </aside>
@@ -193,15 +197,16 @@ export function DashboardLayout() {
                 className="text-xs font-medium text-slate-600 hover:text-brand-600 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition hidden md:inline-flex items-center gap-1.5"
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                <span>Course Catalog</span>
+                <span>{t('nav.courseCatalog', 'Course Catalog')}</span>
               </NavLink>
               <NavLink
                 to="/student/playground"
                 className="text-xs font-medium text-brand-700 bg-brand-50 border border-brand-200 px-3 py-1.5 rounded-lg hover:bg-brand-100 transition inline-flex items-center gap-1.5"
               >
                 <Terminal className="w-3.5 h-3.5" />
-                <span>Playground</span>
+                <span>{t('nav.playground', 'Playground')}</span>
               </NavLink>
+              <LanguageSwitcher />
             </div>
           </header>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../features/auth/AuthContext';
+import { useLanguage } from '../../lib/i18n/LanguageContext';
 import { dataService } from '../../services/dataService';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -23,6 +24,7 @@ import {
 
 export function StudentDashboardPage() {
   const { profile, user } = useAuth();
+  const { t, localize } = useLanguage();
   const [enrollments, setEnrollments] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
@@ -60,13 +62,14 @@ export function StudentDashboardPage() {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-brand-200 text-xs font-semibold backdrop-blur-sm">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Level {profile?.level || 1} Developer</span>
+              <span>{t('common.level', 'Level')} {profile?.level || 1}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Welcome back, {profile?.full_name?.split(' ')[0] || 'Student'}! 👋
+              {t('dashboard.welcomeBack', 'Welcome back')}, {profile?.full_name?.split(' ')[0] || 'Student'}! 👋
             </h1>
             <p className="text-xs sm:text-sm text-brand-200 max-w-xl">
-              You are on a <strong className="text-amber-300 font-bold">{profile?.streak_days || 1}-day learning streak</strong>. Keep coding to reach your next milestone!
+              {t('dashboard.readyToLearn', 'Ready to master new concepts today?')} (
+              <strong className="text-amber-300 font-bold">{profile?.streak_days || 1} {t('common.streak', 'day streak')}</strong>)
             </p>
           </div>
 
@@ -78,7 +81,7 @@ export function StudentDashboardPage() {
                 className="bg-white text-brand-900 hover:bg-slate-100 font-bold shadow-lg"
                 icon={Terminal}
               >
-                Open Playground
+                {t('dashboard.playground', 'Open Playground')}
               </Button>
             </Link>
           </div>
@@ -92,7 +95,7 @@ export function StudentDashboardPage() {
             <Sparkles className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">XP Points</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('dashboard.totalXp', 'XP Points')}</p>
             <p className="text-2xl font-extrabold text-slate-900">{profile?.xp || 0}</p>
           </div>
         </Card>
@@ -102,8 +105,8 @@ export function StudentDashboardPage() {
             <Flame className="w-6 h-6 fill-amber-500 text-amber-500" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Streak</p>
-            <p className="text-2xl font-extrabold text-slate-900">{profile?.streak_days || 1} Days</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('dashboard.currentStreak', 'Active Streak')}</p>
+            <p className="text-2xl font-extrabold text-slate-900">{profile?.streak_days || 1} {t('common.days', 'Days')}</p>
           </div>
         </Card>
 
@@ -112,7 +115,7 @@ export function StudentDashboardPage() {
             <BookOpen className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Enrolled Tracks</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('dashboard.enrolledCoursesCount', 'Enrolled Tracks')}</p>
             <p className="text-2xl font-extrabold text-slate-900">{enrollments.length}</p>
           </div>
         </Card>
@@ -122,7 +125,7 @@ export function StudentDashboardPage() {
             <Award className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Badges Unlocked</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('dashboard.certificatesEarned', 'Badges Unlocked')}</p>
             <p className="text-2xl font-extrabold text-slate-900">2 / 5</p>
           </div>
         </Card>
@@ -133,9 +136,9 @@ export function StudentDashboardPage() {
         {/* Continue Learning Box */}
         <div className="lg:col-span-1 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-extrabold text-slate-900 text-lg">Continue Learning</h3>
+            <h3 className="font-extrabold text-slate-900 text-lg">{t('dashboard.continueLearning', 'Continue Learning')}</h3>
             <Link to="/student/my-courses" className="text-xs font-semibold text-brand-600 hover:underline">
-              View All
+              {t('dashboard.viewAll', 'View All')}
             </Link>
           </div>
 
@@ -210,10 +213,10 @@ export function StudentDashboardPage() {
           <div className="flex items-center justify-between">
             <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
               <FileCheck className="w-5 h-5 text-brand-600" />
-              <span>Pending Assignments</span>
+              <span>{t('dashboard.assignments', 'Vazifalar')}</span>
             </h3>
             <Link to="/student/assignments" className="text-xs font-semibold text-brand-600 hover:underline">
-              View All
+              {t('dashboard.viewAll', "Barchasini ko'rish")}
             </Link>
           </div>
 
@@ -221,16 +224,14 @@ export function StudentDashboardPage() {
             {assignments.map((assign) => (
               <Card key={assign.id} className="p-4 flex items-center justify-between gap-4">
                 <div className="space-y-1">
-                  <h4 className="font-bold text-slate-900 text-xs sm:text-sm">{assign.title}</h4>
+                  <h4 className="font-bold text-slate-900 text-xs sm:text-sm">{localize(assign.title)}</h4>
                   <div className="flex items-center gap-3 text-[11px] text-slate-500">
-                    <span>Due in 5 days</span>
-                    <span>•</span>
-                    <span className="text-brand-600 font-semibold">{assign.max_points} Points</span>
+                    <span className="text-brand-600 font-semibold">{assign.max_points} {t('common.xp', 'ball')}</span>
                   </div>
                 </div>
                 <Link to="/student/assignments">
                   <Button variant="outline" size="sm" className="text-xs">
-                    Submit Code
+                    {t('dashboard.startLesson', 'Bajarish')}
                   </Button>
                 </Link>
               </Card>
@@ -243,10 +244,10 @@ export function StudentDashboardPage() {
           <div className="flex items-center justify-between">
             <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
               <HelpCircle className="w-5 h-5 text-violet-600" />
-              <span>Checkup Quizzes</span>
+              <span>{t('quizzes.title', 'Savol-javoblar va testlar')}</span>
             </h3>
             <Link to="/student/quizzes" className="text-xs font-semibold text-brand-600 hover:underline">
-              View All
+              {t('dashboard.viewAll', "Barchasini ko'rish")}
             </Link>
           </div>
 
@@ -254,16 +255,16 @@ export function StudentDashboardPage() {
             {quizzes.map((quiz) => (
               <Card key={quiz.id} className="p-4 flex items-center justify-between gap-4">
                 <div className="space-y-1">
-                  <h4 className="font-bold text-slate-900 text-xs sm:text-sm">{quiz.title}</h4>
+                  <h4 className="font-bold text-slate-900 text-xs sm:text-sm">{localize(quiz.title)}</h4>
                   <div className="flex items-center gap-3 text-[11px] text-slate-500">
-                    <span>{quiz.questions?.length || 4} Questions</span>
+                    <span>{quiz.questions?.length || 4} {t('quizzes.questionsCount', 'ta savol')}</span>
                     <span>•</span>
-                    <span className="text-brand-600 font-semibold">+{quiz.xp_reward} XP</span>
+                    <span className="text-brand-600 font-semibold">+{quiz.xp_reward} {t('common.xp', 'XP')}</span>
                   </div>
                 </div>
                 <Link to="/student/quizzes">
                   <Button variant="primary" size="sm" className="text-xs">
-                    Take Quiz
+                    {t('quizzes.startQuiz', 'Boshlash')}
                   </Button>
                 </Link>
               </Card>
