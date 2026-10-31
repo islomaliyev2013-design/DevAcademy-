@@ -49,6 +49,7 @@ export const router = createBrowserRouter([
       { path: 'forgot-password', element: <ForgotPasswordPage /> },
       { path: 'courses', element: <CoursesCatalogPage /> },
       { path: 'courses/:courseId', element: <CourseDetailPage /> },
+      { path: 'playground', element: <PlaygroundPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

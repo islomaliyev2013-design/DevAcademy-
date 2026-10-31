@@ -1,84 +1,140 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
-export async function askAIMentor({ message, codeContext = '', history = [], lessonContext = '' }) {
-  // If Supabase is configured and has edge function deployed:
+// Check if AI Mentor backend or client test key is configured
+export function getAIConfigurationStatus() {
+  const customKey = localStorage.getItem('devacademy_ai_api_key');
+  const customEndpoint = import.meta.env.VITE_AI_ENDPOINT_URL || localStorage.getItem('devacademy_ai_endpoint');
+
+  if (isSupabaseConfigured) {
+    return {
+      isConfigured: true,
+      provider: 'Supabase Edge Function (ai-mentor)',
+      mode: 'edge-function',
+    };
+  }
+
+  if (customKey) {
+    return {
+      isConfigured: true,
+      provider: 'Custom AI API Key (Client Configured)',
+      mode: 'direct-key',
+    };
+  }
+
+  if (customEndpoint) {
+    return {
+      isConfigured: true,
+      provider: 'Custom AI Proxy Endpoint',
+      mode: 'proxy',
+    };
+  }
+
+  return {
+    isConfigured: false,
+    provider: 'None',
+    mode: 'unconfigured',
+  };
+}
+
+export async function askAIMentor({
+  message,
+  codeContext = '',
+  history = [],
+  lessonContext = '',
+  htmlCode = '',
+  cssCode = '',
+  jsCode = '',
+}) {
+  const status = getAIConfigurationStatus();
+
+  // If Supabase edge function is available:
   if (isSupabaseConfigured) {
     try {
       const { data, error } = await supabase.functions.invoke('ai-mentor', {
-        body: { message, codeContext, history, lessonContext },
+        body: {
+          message,
+          codeContext: codeContext || `HTML:\n${htmlCode}\n\nCSS:\n${cssCode}\n\nJS:\n${jsCode}`,
+          history,
+          lessonContext,
+        },
       });
+
       if (!error && data?.reply) {
-        return data.reply;
+        return { success: true, reply: data.reply };
+      }
+      if (error) {
+        throw new Error(error.message || 'Supabase AI function error');
       }
     } catch (err) {
-      console.warn('Edge function invoke failed, using smart educational assistant fallback:', err);
+      console.error('Supabase edge function call failed:', err);
+      throw new Error(`AI Edge Function error: ${err.message}`);
     }
   }
 
-  // Pedagogical simulated response generator tailored to student questions & code context
-  await new Promise((resolve) => setTimeout(resolve, 600));
+  // If user provided a custom test API key (e.g. OpenAI or Gemini-compatible key in playground settings)
+  const clientApiKey = localStorage.getItem('devacademy_ai_api_key');
+  if (clientApiKey) {
+    try {
+      const systemPrompt = `You are DevAcademy AI Mentor, an expert programming instructor and code reviewer.
+Guide students patiently with step-by-step hints and readable markdown.
+HTML:
+${htmlCode || '(empty)'}
 
-  const lower = message.toLowerCase();
+CSS:
+${cssCode || '(empty)'}
 
-  if (lower.includes('explain') || lower.includes('how does this work')) {
-    return `### 💡 Code Explanation
+JavaScript:
+${jsCode || '(empty)'}
+`;
 
-Here is a breakdown of the code you provided:
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${clientApiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...history.map((h) => ({
+              role: h.sender === 'user' ? 'user' : 'assistant',
+              content: h.content,
+            })),
+            { role: 'user', content: message },
+          ],
+          temperature: 0.7,
+          max_tokens: 800,
+        }),
+      });
 
-1. **Architecture & Scope**: The code is designed to maintain state in a localized scope and manipulate the output reactively.
-2. **Execution Flow**: When triggered, it captures the current values, evaluates conditions, and reflects updates directly on the interface.
-3. **Key Pattern**: This follows standard declarative programming principles where your code is a function of state!
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`AI API returned HTTP ${response.status}: ${errText}`);
+      }
 
-\`\`\`javascript
-// Cleaned up for maximum clarity:
-${codeContext.slice(0, 160) || '// Write some code in the editor to see detailed line-by-line notes!'}
-\`\`\`
-
-Would you like to explore how to refactor this with custom hooks or optimize its Big-O complexity?`;
+      const data = await response.json();
+      const reply = data.choices?.[0]?.message?.content || 'No response returned from model.';
+      return { success: true, reply };
+    } catch (err) {
+      console.error('Client AI request failed:', err);
+      throw err;
+    }
   }
 
-  if (lower.includes('error') || lower.includes('bug') || lower.includes('fix') || lower.includes('wrong')) {
-    return `### 🔍 Debugging Analysis
-
-I reviewed your active code snippet. Here are the top things to verify:
-
-1. **Null/Undefined Checks**: Ensure you check if DOM elements or variables exist before accessing properties or adding listeners.
-2. **State Immutability**: Remember never to mutate arrays or objects directly (use \`[...prev, newItem]\` or \`map\`).
-3. **Event Listener Cleanup**: Always ensure callbacks don't fire duplicate times on re-renders.
-
-\`\`\`javascript
-// Defensive programming pattern:
-if (!data) return null;
-const safeResult = data.filter(Boolean);
-\`\`\`
-
-Try running this test case in the playground console!`;
-  }
-
-  if (lower.includes('optimize') || lower.includes('improve')) {
-    return `### 🚀 Performance & Code Quality Tips
-
-Here is how you can level up this solution:
-
-- **Memoization**: If calculating expensive derived values, consider caching results to avoid unnecessary re-calculations.
-- **Semantic Naming**: Name event handlers clearly with \`handle<Event>\` (e.g., \`handleUserSubmit\`).
-- **Separation of Concerns**: Keep business logic separated from UI rendering logic.
-
-Great job asking for code reviews—this is how senior developers think!`;
-  }
-
-  // General helpful response
-  return `### 🤖 DevAcademy Mentor
-
-I'm here to help you master this concept! 
-
-Based on your question:
-> "${message}"
-
-Here is my recommendation:
-- Focus on understanding the underlying data flow: inputs -> transformation -> output.
-- Break down complex logic into small, testable pure functions.
-- Test your code step-by-step using the **Run** button in the playground.
-
-Feel free to paste any snippet or error log, and I'll debug it with you!`;
+  // If no backend is configured, do NOT fake responses - return unconfigured status with setup guide
+  return {
+    success: false,
+    isUnconfigured: true,
+    setupGuide: {
+      title: 'AI Coding Mentor is not configured',
+      description:
+        'To use real-time AI assistance, configure a backend service or add a developer API key.',
+      steps: [
+        'Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file.',
+        'Deploy the Supabase ai-mentor edge function with your AI_API_KEY.',
+        'Or click "Configure AI Key" to provide a local API key for testing during development.',
+      ],
+    },
+  };
 }

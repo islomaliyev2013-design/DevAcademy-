@@ -1,171 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
-import Editor from '@monaco-editor/react';
-import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
-import { AIMentorWidget } from '../ai-mentor/AIMentorWidget';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useToast } from '../../components/ui/Toast';
+import { Button } from '../../components/ui/Button';
 import {
-  Play,
-  RotateCcw,
-  Save,
-  Download,
-  Share2,
-  Sparkles,
-  Terminal,
-  Code,
-  Layers,
-  FileCode,
-  CheckCircle2,
-  AlertTriangle,
-  FolderOpen,
-} from 'lucide-react';
+  DEFAULT_PROJECTS,
+  isPythonProject,
+  getLanguageFromFilename,
+} from './types';
+import { runPythonCode, initPyodide, isPyodideReady } from './pythonRunner';
+import { FileExplorer } from './components/FileExplorer';
+import { EditorArea } from './components/EditorArea';
+import { PreviewPanel } from './components/PreviewPanel';
+import { TerminalPanel } from './components/TerminalPanel';
+import { IDEHeader } from './components/IDEHeader';
+import { StatusBar } from './components/StatusBar';
+import { NewItemModal } from './components/NewItemModal';
+import { RenameModal } from './components/RenameModal';
+import { DeleteConfirmModal } from './components/DeleteConfirmModal';
+import { IDESettingsModal } from './components/IDESettingsModal';
+import { TemplatesModal } from './components/TemplatesModal';
+import { AIMentorWidget } from '../ai-mentor/AIMentorWidget';
+import { CheckCircle2, Send, Sparkles, X } from 'lucide-react';
 
-const STARTER_TEMPLATES = {
-  counter: {
-    name: 'Interactive Counter',
-    html: `<div class="card">
-  <h2>Interactive Counter</h2>
-  <div class="counter-box">
-    <button id="decBtn" class="btn">-</button>
-    <span id="counterDisplay">0</span>
-    <button id="incBtn" class="btn">+</button>
-  </div>
-</div>`,
-    css: `body {
-  font-family: 'Inter', system-ui, sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  margin: 0;
-  background: #f8f9fe;
-}
-.card {
-  background: white;
-  padding: 2.5rem;
-  border-radius: 1.5rem;
-  box-shadow: 0 10px 25px rgba(124, 58, 237, 0.1);
-  text-align: center;
-  border: 1px solid #ede9fe;
-}
-h2 {
-  color: #1e1b4b;
-  margin-top: 0;
-  font-size: 1.5rem;
-}
-.counter-box {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-}
-.btn {
-  background: #7c3aed;
-  color: white;
-  border: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  font-size: 1.25rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.1s, background 0.2s;
-}
-.btn:hover {
-  background: #6d28d9;
-}
-.btn:active {
-  transform: scale(0.95);
-}
-#counterDisplay {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: #4c1d95;
-  min-width: 60px;
-  font-family: monospace;
-}`,
-    js: `let count = 0;
-const display = document.getElementById('counterDisplay');
-
-document.getElementById('incBtn').addEventListener('click', () => {
-  count++;
-  display.textContent = count;
-  console.log('Incremented to:', count);
-});
-
-document.getElementById('decBtn').addEventListener('click', () => {
-  count--;
-  display.textContent = count;
-  console.log('Decremented to:', count);
-});`,
-  },
-  todo: {
-    name: 'Modern Task List',
-    html: `<div class="todo-app">
-  <h2>DevAcademy Tasks</h2>
-  <div class="input-row">
-    <input id="todoInput" placeholder="Add a new task..." />
-    <button id="addTodoBtn">Add</button>
-  </div>
-  <ul id="todoList"></ul>
-</div>`,
-    css: `body {
-  font-family: 'Inter', system-ui, sans-serif;
-  background: #f8f9fe;
-  display: flex;
-  justify-content: center;
-  padding: 2rem 1rem;
-}
-.todo-app {
-  background: white;
-  width: 100%;
-  max-width: 420px;
-  padding: 2rem;
-  border-radius: 1.25rem;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-}
-h2 { color: #0f172a; margin-top: 0; }
-.input-row { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
-input {
-  flex: 1;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 0.5rem;
-  outline: none;
-}
-input:focus { border-color: #7c3aed; }
-button {
-  background: #7c3aed;
-  color: white;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 0.5rem;
-  cursor: pointer;
-}
-ul { list-style: none; padding: 0; margin: 0; }
-li {
-  padding: 0.75rem;
-  border-bottom: 1px solid #f1f5f9;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-li.completed { text-decoration: line-through; color: #94a3b8; }`,
-    js: `const input = document.getElementById('todoInput');
-const btn = document.getElementById('addTodoBtn');
-const list = document.getElementById('todoList');
-
-btn.onclick = () => {
-  const val = input.value.trim();
-  if (!val) return;
-  const li = document.createElement('li');
-  li.textContent = val;
-  li.onclick = () => li.classList.toggle('completed');
-  list.appendChild(li);
-  input.value = '';
-};`,
-  },
-};
+const STORAGE_PROJECTS_KEY = 'devacademy_ide_projects_v3';
+const STORAGE_SETTINGS_KEY = 'devacademy_ide_settings_v3';
 
 export function CodePlayground({
   initialHtml = '',
@@ -174,332 +31,925 @@ export function CodePlayground({
   onAssignmentSubmit = null,
   assignmentTitle = '',
 }) {
-  const [activeTab, setActiveTab] = useState('html'); // 'html' | 'css' | 'js' | 'console'
-  const [htmlCode, setHtmlCode] = useState(initialHtml || STARTER_TEMPLATES.counter.html);
-  const [cssCode, setCssCode] = useState(initialCss || STARTER_TEMPLATES.counter.css);
-  const [jsCode, setJsCode] = useState(initialJs || STARTER_TEMPLATES.counter.js);
-  const [consoleLogs, setConsoleLogs] = useState([]);
-  const [showAIMentor, setShowAIMentor] = useState(true);
-  const [isRunning, setIsRunning] = useState(false);
-  const iframeRef = useRef(null);
   const { addToast } = useToast();
 
-  // Run the sandboxed code
-  const runCode = () => {
-    setIsRunning(true);
-    setConsoleLogs([]);
-
-    const combinedHtml = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <style>${cssCode}</style>
-          <script>
-            // Intercept console.log and errors for playground console
-            const originalLog = console.log;
-            const originalError = console.error;
-            window.onerror = function(msg, url, line) {
-              window.parent.postMessage({ type: 'CONSOLE_LOG', level: 'error', text: 'Error on line ' + line + ': ' + msg }, '*');
-              return false;
-            };
-            console.log = function(...args) {
-              originalLog.apply(console, args);
-              window.parent.postMessage({ type: 'CONSOLE_LOG', level: 'log', text: args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ') }, '*');
-            };
-            console.error = function(...args) {
-              originalError.apply(console, args);
-              window.parent.postMessage({ type: 'CONSOLE_LOG', level: 'error', text: args.join(' ') }, '*');
-            };
-          </script>
-        </head>
-        <body>
-          ${htmlCode}
-          <script>
-            try {
-              ${jsCode}
-            } catch (err) {
-              console.error(err.message);
-            }
-          </script>
-        </body>
-      </html>
-    `;
-
-    if (iframeRef.current) {
-      iframeRef.current.srcdoc = combinedHtml;
+  // Load starter project
+  const getInitialProject = () => {
+    // If lesson or assignment gave initial code
+    if (initialHtml || initialCss || initialJs) {
+      return {
+        id: 'assignment-project',
+        name: assignmentTitle || 'Course Exercise',
+        files: [
+          {
+            id: 'file-html-custom',
+            name: 'index.html',
+            path: '/index.html',
+            type: 'file',
+            parentId: null,
+            content: initialHtml || '<!DOCTYPE html>\n<html>\n<head></head>\n<body>\n</body>\n</html>',
+          },
+          {
+            id: 'file-css-custom',
+            name: 'style.css',
+            path: '/style.css',
+            type: 'file',
+            parentId: null,
+            content: initialCss || '/* Styles */\n',
+          },
+          {
+            id: 'file-js-custom',
+            name: 'script.js',
+            path: '/script.js',
+            type: 'file',
+            parentId: null,
+            content: initialJs || '// JavaScript\n',
+          },
+        ],
+      };
     }
-    setTimeout(() => setIsRunning(false), 300);
+
+    // Default to the first rich starter template
+    const defaultTemplate = DEFAULT_PROJECTS[0];
+    return {
+      id: defaultTemplate.id,
+      name: defaultTemplate.name,
+      files: JSON.parse(JSON.stringify(defaultTemplate.files)),
+    };
   };
 
-  // Listen to message events from iframe
+  const initialProject = getInitialProject();
+
+  // Core Project State
+  const [projectName, setProjectName] = useState(initialProject.name);
+  const [activeProjectId, setActiveProjectId] = useState(initialProject.id);
+  const [files, setFiles] = useState(initialProject.files);
+  const [savedProjects, setSavedProjects] = useState([]);
+
+  // Editor Tabs State
+  const [openFileIds, setOpenFileIds] = useState(() => {
+    const firstFile = initialProject.files.find((f) => f.type === 'file');
+    return firstFile ? [firstFile.id] : [];
+  });
+  const [activeFileId, setActiveFileId] = useState(() => {
+    const firstFile = initialProject.files.find((f) => f.type === 'file');
+    return firstFile ? firstFile.id : null;
+  });
+
+  // UI Panels
+  const [showPreview, setShowPreview] = useState(true);
+  const [showTerminal, setShowTerminal] = useState(true);
+  const [showAIMentor, setShowAIMentor] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [previewKey, setPreviewKey] = useState(0);
+
+  // Logs & Runtime
+  const [terminalLogs, setTerminalLogs] = useState([
+    {
+      id: 'init-1',
+      time: new Date().toLocaleTimeString(),
+      text: 'DevAcademy IDE Playground v3.0 ready.',
+      level: 'info',
+    },
+    {
+      id: 'init-2',
+      time: new Date().toLocaleTimeString(),
+      text: 'Workspace loaded: ' + initialProject.name,
+      level: 'info',
+    },
+  ]);
+  const [consoleLogs, setConsoleLogs] = useState([]);
+  const [outputLogs, setOutputLogs] = useState([
+    {
+      id: 'out-1',
+      time: new Date().toLocaleTimeString(),
+      text: 'Environment ready. Monaco Editor initialized.',
+    },
+  ]);
+  const [isPythonRunning, setIsPythonRunning] = useState(false);
+  const [pythonStatus, setPythonStatus] = useState('');
+  const [pyodideReady, setPyodideReady] = useState(false);
+  const [cursorPosition, setCursorPosition] = useState({ lineNumber: 1, column: 1 });
+
+  // Settings
+  const [settings, setSettings] = useState(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_SETTINGS_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return {
+      fontSize: 14,
+      tabSize: 2,
+      wordWrap: 'on',
+      minimap: false,
+      autoRunOnSave: true,
+    };
+  });
+
+  // Modals
+  const [newItemModal, setNewItemModal] = useState({ isOpen: false, type: 'file', parentId: null });
+  const [renameModal, setRenameModal] = useState({ isOpen: false, item: null });
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, item: null });
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [templatesModalOpen, setTemplatesModalOpen] = useState(false);
+
+  // Active file object
+  const activeFile = files.find((f) => f.id === activeFileId) || null;
+  const openFiles = files.filter((f) => openFileIds.includes(f.id));
+  const hasUnsavedChanges = files.some((f) => f.isDirty);
+  const isPython = isPythonProject(files);
+
+  // Save settings to localStorage
+  const handleUpdateSettings = (newSettings) => {
+    setSettings(newSettings);
+    try {
+      localStorage.setItem(STORAGE_SETTINGS_KEY, JSON.stringify(newSettings));
+      addToast('Editor settings saved', 'success');
+    } catch (e) {}
+  };
+
+  // Load saved projects on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_PROJECTS_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) setSavedProjects(parsed);
+      }
+    } catch (e) {
+      console.warn('Failed to load saved projects:', e);
+    }
+  }, []);
+
+  // Save projects list to localStorage
+  const persistProjects = (projects) => {
+    try {
+      localStorage.setItem(STORAGE_PROJECTS_KEY, JSON.stringify(projects));
+      setSavedProjects(projects);
+    } catch (e) {
+      console.error('Storage error:', e);
+      addToast('Error saving projects to localStorage', 'error');
+    }
+  };
+
+  // Listen to messages from Preview sandbox iframe
   useEffect(() => {
     const handleMessage = (e) => {
-      if (e.data?.type === 'CONSOLE_LOG') {
+      if (e.data?.type === 'PLAYGROUND_CONSOLE') {
         setConsoleLogs((prev) => [
           ...prev,
           {
-            id: Math.random().toString(),
+            id: 'log-' + Math.random().toString(36).substr(2, 9),
             time: new Date().toLocaleTimeString(),
             level: e.data.level,
             text: e.data.text,
           },
         ]);
+      } else if (e.data?.type === 'PLAYGROUND_RUNTIME_ERROR') {
+        const errLog = {
+          id: 'err-' + Math.random().toString(36).substr(2, 9),
+          time: new Date().toLocaleTimeString(),
+          level: 'error',
+          text: e.data.text,
+        };
+        setConsoleLogs((prev) => [...prev, errLog]);
+        setTerminalLogs((prev) => [...prev, errLog]);
       }
     };
+
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Initial run on mount
+  // Keyboard shortcut listener: Ctrl+S to save, Ctrl+Enter to run
   useEffect(() => {
-    runCode();
-  }, []);
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleRun();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [files, activeFile, isPython]);
 
-  const handleTemplateSelect = (key) => {
-    const tmpl = STARTER_TEMPLATES[key];
-    if (tmpl) {
-      setHtmlCode(tmpl.html);
-      setCssCode(tmpl.css);
-      setJsCode(tmpl.js);
-      addToast(`Loaded "${tmpl.name}" template`, 'info');
-      setTimeout(runCode, 50);
+  // File selection
+  const handleSelectFile = (fileId) => {
+    if (!openFileIds.includes(fileId)) {
+      setOpenFileIds((prev) => [...prev, fileId]);
+    }
+    setActiveFileId(fileId);
+  };
+
+  // Select open tab
+  const handleSelectTab = (fileId) => {
+    setActiveFileId(fileId);
+  };
+
+  // Close tab
+  const handleCloseTab = (fileId) => {
+    const newOpenIds = openFileIds.filter((id) => id !== fileId);
+    setOpenFileIds(newOpenIds);
+
+    if (activeFileId === fileId) {
+      if (newOpenIds.length > 0) {
+        setActiveFileId(newOpenIds[newOpenIds.length - 1]);
+      } else {
+        setActiveFileId(null);
+      }
     }
   };
 
-  const handleReset = () => {
-    setHtmlCode(initialHtml || STARTER_TEMPLATES.counter.html);
-    setCssCode(initialCss || STARTER_TEMPLATES.counter.css);
-    setJsCode(initialJs || STARTER_TEMPLATES.counter.js);
-    addToast('Code reset to default starter template', 'info');
-    setTimeout(runCode, 50);
+  // Update code content
+  const handleCodeChange = (fileId, newContent) => {
+    setFiles((prev) =>
+      prev.map((f) => (f.id === fileId ? { ...f, content: newContent, isDirty: true } : f))
+    );
   };
 
-  const handleSaveLocal = () => {
-    const project = { html: htmlCode, css: cssCode, js: jsCode, savedAt: new Date().toISOString() };
-    localStorage.setItem('devacademy_playground_saved', JSON.stringify(project));
-    addToast('Project saved successfully to local storage!', 'success');
+  // Save Project
+  const handleSave = () => {
+    const now = new Date().toISOString();
+    const cleanFiles = files.map((f) => ({ ...f, isDirty: false }));
+    setFiles(cleanFiles);
+
+    const projectData = {
+      id: activeProjectId || 'project-' + Date.now(),
+      name: projectName.trim() || 'Untitled Project',
+      files: cleanFiles,
+      updatedAt: now,
+    };
+
+    const existingIndex = savedProjects.findIndex((p) => p.id === projectData.id);
+    let updated;
+    if (existingIndex >= 0) {
+      updated = savedProjects.map((p, idx) => (idx === existingIndex ? projectData : p));
+    } else {
+      updated = [projectData, ...savedProjects];
+    }
+
+    persistProjects(updated);
+    setActiveProjectId(projectData.id);
+
+    setOutputLogs((prev) => [
+      ...prev,
+      {
+        id: 'save-' + Date.now(),
+        time: new Date().toLocaleTimeString(),
+        text: `Project "${projectData.name}" saved successfully (${cleanFiles.length} files).`,
+      },
+    ]);
+
+    addToast(`Project "${projectData.name}" saved`, 'success');
+
+    if (settings.autoRunOnSave) {
+      handleRun();
+    }
   };
 
-  const activeCodeContent =
-    activeTab === 'html' ? htmlCode : activeTab === 'css' ? cssCode : jsCode;
+  // Run Code
+  const handleRun = async () => {
+    // If active file is Python or project is a Python project and we run Python
+    const isPyActive = activeFile && activeFile.name.toLowerCase().endsWith('.py');
+    const isRunningPython = isPyActive || isPython;
 
-  const currentEditorLang =
-    activeTab === 'html' ? 'html' : activeTab === 'css' ? 'css' : 'javascript';
+    if (isRunningPython) {
+      // Find Python entry file: main.py, or app.py, or active .py file
+      let entryFile = activeFile && isPyActive ? activeFile : null;
+      if (!entryFile) {
+        entryFile = files.find(
+          (f) => f.type === 'file' && f.name.toLowerCase() === 'main.py'
+        );
+      }
+      if (!entryFile) {
+        entryFile = files.find(
+          (f) => f.type === 'file' && f.name.toLowerCase() === 'app.py'
+        );
+      }
+      if (!entryFile) {
+        entryFile = files.find((f) => f.type === 'file' && f.name.endsWith('.py'));
+      }
+
+      if (!entryFile) {
+        addToast('No Python file found to run', 'error');
+        return;
+      }
+
+      setShowTerminal(true);
+      setIsPythonRunning(true);
+      setPythonStatus('Running ' + entryFile.name);
+
+      setTerminalLogs((prev) => [
+        ...prev,
+        {
+          id: 'cmd-' + Date.now(),
+          time: new Date().toLocaleTimeString(),
+          text: `python ${entryFile.name}`,
+          isCommand: true,
+        },
+      ]);
+
+      const result = await runPythonCode({
+        code: entryFile.content,
+        projectFiles: files,
+        entryFileName: entryFile.name,
+        onStdout: (out) => {
+          setTerminalLogs((prev) => [
+            ...prev,
+            {
+              id: 'out-' + Math.random().toString(36).substr(2, 9),
+              time: new Date().toLocaleTimeString(),
+              text: out,
+              level: 'info',
+            },
+          ]);
+        },
+        onStderr: (err) => {
+          setTerminalLogs((prev) => [
+            ...prev,
+            {
+              id: 'err-' + Math.random().toString(36).substr(2, 9),
+              time: new Date().toLocaleTimeString(),
+              text: err,
+              level: 'error',
+            },
+          ]);
+        },
+        onStatus: (status) => setPythonStatus(status),
+      });
+
+      setIsPythonRunning(false);
+      setPythonStatus('');
+      setPyodideReady(isPyodideReady());
+
+      if (result.success) {
+        setTerminalLogs((prev) => [
+          ...prev,
+          {
+            id: 'done-' + Date.now(),
+            time: new Date().toLocaleTimeString(),
+            text: `[Process completed with exit code 0 in ${result.durationMs}ms]`,
+            level: 'success',
+          },
+        ]);
+        addToast(`Python execution finished in ${result.durationMs}ms`, 'success');
+      } else {
+        setTerminalLogs((prev) => [
+          ...prev,
+          {
+            id: 'err-done-' + Date.now(),
+            time: new Date().toLocaleTimeString(),
+            text: `[Process exited with error in ${result.durationMs}ms]`,
+            level: 'error',
+          },
+        ]);
+        addToast('Python execution encountered errors', 'error');
+      }
+    } else {
+      // Run Frontend Preview
+      setShowPreview(true);
+      setPreviewKey((k) => k + 1);
+
+      setOutputLogs((prev) => [
+        ...prev,
+        {
+          id: 'run-' + Date.now(),
+          time: new Date().toLocaleTimeString(),
+          text: `Rebuilt project and reloaded live preview at ${new Date().toLocaleTimeString()}`,
+        },
+      ]);
+
+      addToast('Live preview updated', 'info');
+    }
+  };
+
+  // Run Terminal Interactive Command
+  const handleRunCommand = async (cmd) => {
+    const trimmed = cmd.trim();
+    if (!trimmed) return;
+
+    setTerminalLogs((prev) => [
+      ...prev,
+      {
+        id: 'cmd-' + Date.now(),
+        time: new Date().toLocaleTimeString(),
+        text: trimmed,
+        isCommand: true,
+      },
+    ]);
+
+    if (trimmed === 'clear' || trimmed === 'cls') {
+      setTerminalLogs([]);
+      return;
+    }
+
+    if (trimmed === 'help') {
+      setTerminalLogs((prev) => [
+        ...prev,
+        {
+          id: 'help-' + Date.now(),
+          time: new Date().toLocaleTimeString(),
+          text: `Available commands:
+  - run               : Build project & trigger preview
+  - python <filename> : Execute a Python file in WebAssembly
+  - ls                : List files in workspace
+  - clear             : Clear terminal screen
+  - status            : Check runtime & project status
+  - help              : Show this help guide`,
+          level: 'info',
+        },
+      ]);
+      return;
+    }
+
+    if (trimmed === 'ls' || trimmed === 'dir') {
+      const listText = files
+        .map((f) => (f.type === 'folder' ? `📁 ${f.name}/` : `📄 ${f.name}`))
+        .join('    ');
+      setTerminalLogs((prev) => [
+        ...prev,
+        {
+          id: 'ls-' + Date.now(),
+          time: new Date().toLocaleTimeString(),
+          text: listText || '(empty workspace)',
+          level: 'info',
+        },
+      ]);
+      return;
+    }
+
+    if (trimmed === 'status') {
+      setTerminalLogs((prev) => [
+        ...prev,
+        {
+          id: 'stat-' + Date.now(),
+          time: new Date().toLocaleTimeString(),
+          text: `Workspace: ${projectName}
+Total Files: ${files.length}
+Python Runtime: ${isPyodideReady() ? 'Pyodide 3.11 Ready' : 'Standby / Lazy-loaded'}
+Open Tabs: ${openFiles.map((f) => f.name).join(', ') || 'None'}`,
+          level: 'info',
+        },
+      ]);
+      return;
+    }
+
+    if (trimmed === 'run') {
+      handleRun();
+      return;
+    }
+
+    if (trimmed.startsWith('python ') || trimmed.startsWith('py ')) {
+      const targetFileName = trimmed.split(' ')[1];
+      const targetFile = files.find(
+        (f) => f.type === 'file' && f.name.toLowerCase() === targetFileName.toLowerCase()
+      );
+      if (targetFile) {
+        setIsPythonRunning(true);
+        const result = await runPythonCode({
+          code: targetFile.content,
+          projectFiles: files,
+          entryFileName: targetFile.name,
+          onStdout: (out) => {
+            setTerminalLogs((prev) => [
+              ...prev,
+              {
+                id: 'out-' + Math.random().toString(36).substr(2, 9),
+                time: new Date().toLocaleTimeString(),
+                text: out,
+                level: 'info',
+              },
+            ]);
+          },
+          onStderr: (err) => {
+            setTerminalLogs((prev) => [
+              ...prev,
+              {
+                id: 'err-' + Math.random().toString(36).substr(2, 9),
+                time: new Date().toLocaleTimeString(),
+                text: err,
+                level: 'error',
+              },
+            ]);
+          },
+        });
+        setIsPythonRunning(false);
+        setPyodideReady(isPyodideReady());
+        setTerminalLogs((prev) => [
+          ...prev,
+          {
+            id: 'term-done-' + Date.now(),
+            time: new Date().toLocaleTimeString(),
+            text: `[Process completed with exit code ${result.success ? 0 : 1} in ${result.durationMs}ms]`,
+            level: result.success ? 'success' : 'error',
+          },
+        ]);
+      } else {
+        setTerminalLogs((prev) => [
+          ...prev,
+          {
+            id: 'err-fnf-' + Date.now(),
+            time: new Date().toLocaleTimeString(),
+            text: `python: can't open file '${targetFileName}': No such file or directory`,
+            level: 'error',
+          },
+        ]);
+      }
+      return;
+    }
+
+    setTerminalLogs((prev) => [
+      ...prev,
+      {
+        id: 'unkn-' + Date.now(),
+        time: new Date().toLocaleTimeString(),
+        text: `bash: ${trimmed}: command not found. Type 'help' for available commands.`,
+        level: 'error',
+      },
+    ]);
+  };
+
+  // Clear Terminal/Console/Output
+  const handleClearLogs = (tab) => {
+    if (tab === 'terminal') setTerminalLogs([]);
+    if (tab === 'console') setConsoleLogs([]);
+    if (tab === 'output') setOutputLogs([]);
+  };
+
+  // Create File or Folder Action
+  const handleCreateItemSubmit = ({ name, type, parentId }) => {
+    // Check duplicate in same folder
+    const exists = files.some(
+      (f) => f.name.toLowerCase() === name.toLowerCase() && f.parentId === parentId
+    );
+    if (exists) {
+      addToast(`A ${type} named "${name}" already exists in this folder`, 'error');
+      return;
+    }
+
+    let defaultContent = '';
+    const lower = name.toLowerCase();
+    if (lower.endsWith('.html')) {
+      defaultContent = '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <title>New Page</title>\n</head>\n<body>\n  <h1>Hello World</h1>\n</body>\n</html>';
+    } else if (lower.endsWith('.css')) {
+      defaultContent = '/* New Stylesheet */\nbody {\n  margin: 0;\n}\n';
+    } else if (lower.endsWith('.js')) {
+      defaultContent = '// JavaScript file\nconsole.log("Loaded ' + name + '");\n';
+    } else if (lower.endsWith('.py')) {
+      defaultContent = '# Python script\nprint("Hello from ' + name + '!")\n';
+    } else if (lower.endsWith('.json')) {
+      defaultContent = '{\n  "name": "data"\n}\n';
+    } else if (lower.endsWith('.md')) {
+      defaultContent = '# ' + name + '\n\nDocument details here.\n';
+    }
+
+    const parentFolder = files.find((f) => f.id === parentId);
+    const parentPath = parentFolder ? parentFolder.path : '';
+    const newPath = `${parentPath}/${name}`;
+
+    const newItem = {
+      id: `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      name,
+      path: newPath,
+      type,
+      parentId: parentId || null,
+      content: type === 'file' ? defaultContent : undefined,
+      isDirty: type === 'file',
+    };
+
+    setFiles((prev) => [...prev, newItem]);
+
+    if (type === 'file') {
+      setOpenFileIds((prev) => [...prev, newItem.id]);
+      setActiveFileId(newItem.id);
+      addToast(`Created file "${name}"`, 'success');
+    } else {
+      addToast(`Created folder "${name}"`, 'success');
+    }
+  };
+
+  // Rename Item Action
+  const handleRenameItemSubmit = (itemId, newName) => {
+    setFiles((prev) =>
+      prev.map((f) => {
+        if (f.id === itemId) {
+          const parentFolder = prev.find((p) => p.id === f.parentId);
+          const parentPath = parentFolder ? parentFolder.path : '';
+          return {
+            ...f,
+            name: newName,
+            path: `${parentPath}/${newName}`,
+            isDirty: true,
+          };
+        }
+        return f;
+      })
+    );
+    addToast(`Renamed to "${newName}"`, 'info');
+  };
+
+  // Delete Item Action
+  const handleDeleteItemSubmit = (itemId) => {
+    // Delete target item and any children if it was a folder
+    const idsToDelete = new Set([itemId]);
+    let added = true;
+    while (added) {
+      added = false;
+      files.forEach((f) => {
+        if (f.parentId && idsToDelete.has(f.parentId) && !idsToDelete.has(f.id)) {
+          idsToDelete.add(f.id);
+          added = true;
+        }
+      });
+    }
+
+    setFiles((prev) => prev.filter((f) => !idsToDelete.has(f.id)));
+    setOpenFileIds((prev) => prev.filter((id) => !idsToDelete.has(id)));
+
+    if (idsToDelete.has(activeFileId)) {
+      const remainingOpen = openFileIds.filter((id) => !idsToDelete.has(id));
+      setActiveFileId(remainingOpen.length > 0 ? remainingOpen[0] : null);
+    }
+
+    addToast('Item deleted', 'info');
+  };
+
+  // Load Starter Template
+  const handleLoadTemplate = (template) => {
+    setProjectName(template.name);
+    setActiveProjectId(null);
+    const clonedFiles = JSON.parse(JSON.stringify(template.files));
+    setFiles(clonedFiles);
+
+    const firstFile = clonedFiles.find((f) => f.type === 'file');
+    if (firstFile) {
+      setOpenFileIds([firstFile.id]);
+      setActiveFileId(firstFile.id);
+    } else {
+      setOpenFileIds([]);
+      setActiveFileId(null);
+    }
+
+    setTerminalLogs((prev) => [
+      ...prev,
+      {
+        id: 'tmpl-' + Date.now(),
+        time: new Date().toLocaleTimeString(),
+        text: `Loaded starter template: ${template.name}`,
+        level: 'info',
+      },
+    ]);
+
+    addToast(`Loaded "${template.name}" template`, 'success');
+  };
+
+  // Load Saved Project
+  const handleLoadSavedProject = (project) => {
+    setProjectName(project.name);
+    setActiveProjectId(project.id);
+    const loadedFiles = JSON.parse(JSON.stringify(project.files || []));
+    setFiles(loadedFiles);
+
+    const firstFile = loadedFiles.find((f) => f.type === 'file');
+    if (firstFile) {
+      setOpenFileIds([firstFile.id]);
+      setActiveFileId(firstFile.id);
+    } else {
+      setOpenFileIds([]);
+      setActiveFileId(null);
+    }
+
+    setTerminalLogs((prev) => [
+      ...prev,
+      {
+        id: 'load-' + Date.now(),
+        time: new Date().toLocaleTimeString(),
+        text: `Loaded saved project "${project.name}" (${loadedFiles.length} files).`,
+        level: 'info',
+      },
+    ]);
+
+    addToast(`Loaded project "${project.name}"`, 'success');
+  };
+
+  // Delete Saved Project from storage
+  const handleDeleteSavedProject = (projectId) => {
+    const updated = savedProjects.filter((p) => p.id !== projectId);
+    persistProjects(updated);
+    addToast('Saved project removed', 'info');
+  };
+
+  // Assignment Submit Handler
+  const handleAssignmentSubmitClick = () => {
+    if (onAssignmentSubmit) {
+      const htmlFile = files.find((f) => f.name === 'index.html');
+      const cssFile = files.find((f) => f.name === 'style.css');
+      const jsFile = files.find((f) => f.name === 'script.js');
+      onAssignmentSubmit({
+        html: htmlFile ? htmlFile.content : '',
+        css: cssFile ? cssFile.content : '',
+        js: jsFile ? jsFile.content : '',
+        files: files,
+      });
+      addToast('Assignment submitted successfully!', 'success');
+    }
+  };
+
+  // Collect folder list for modals
+  const folderList = files.filter((f) => f.type === 'folder');
+
+  // Fullscreen container styling
+  const containerClass = isFullscreen
+    ? 'fixed inset-0 z-50 flex flex-col bg-[#1e1e1e] overflow-hidden'
+    : 'relative w-full h-[780px] min-h-[600px] flex flex-col bg-[#1e1e1e] rounded-xl border border-slate-800 shadow-2xl overflow-hidden font-sans';
 
   return (
-    <div className="flex flex-col h-[calc(100vh-10rem)] min-h-[640px] bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
-      {/* Top action toolbar */}
-      <div className="bg-navy-950 px-4 py-2.5 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
-        {/* Editor language tabs */}
-        <div className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+    <div className={containerClass}>
+      {/* IDE Top Toolbar */}
+      <IDEHeader
+        projectName={projectName}
+        onRenameProject={(newName) => {
+          setProjectName(newName);
+          addToast(`Project renamed to "${newName}"`, 'info');
+        }}
+        onCreateFile={(parentId) =>
+          setNewItemModal({ isOpen: true, type: 'file', parentId })
+        }
+        onCreateFolder={(parentId) =>
+          setNewItemModal({ isOpen: true, type: 'folder', parentId })
+        }
+        onSave={handleSave}
+        onRun={handleRun}
+        hasUnsavedChanges={hasUnsavedChanges}
+        showPreview={showPreview}
+        onTogglePreview={() => setShowPreview(!showPreview)}
+        showTerminal={showTerminal}
+        onToggleTerminal={() => setShowTerminal(!showTerminal)}
+        showAIMentor={showAIMentor}
+        onToggleAIMentor={() => setShowAIMentor(!showAIMentor)}
+        onOpenSettings={() => setSettingsModalOpen(true)}
+        onOpenTemplates={() => setTemplatesModalOpen(true)}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
+        isPython={isPython}
+        isRunning={isPythonRunning}
+      />
+
+      {/* Assignment Banner if applicable */}
+      {onAssignmentSubmit && (
+        <div className="h-8 px-4 bg-brand-950/80 border-b border-brand-800/60 flex items-center justify-between text-xs text-brand-300">
+          <span className="font-semibold truncate">
+            Assignment: {assignmentTitle || 'Coding Exercise'}
+          </span>
           <button
-            onClick={() => setActiveTab('html')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeTab === 'html'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
+            onClick={handleAssignmentSubmitClick}
+            className="px-2.5 py-0.5 rounded bg-brand-600 hover:bg-brand-500 text-white font-semibold transition flex items-center gap-1"
           >
-            <Code className="w-3.5 h-3.5 text-amber-400" />
-            <span>HTML</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('css')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeTab === 'css'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5 text-sky-400" />
-            <span>CSS</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('js')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeTab === 'js'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <FileCode className="w-3.5 h-3.5 text-yellow-400" />
-            <span>JavaScript</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('console')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeTab === 'console'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Console</span>
-            {consoleLogs.length > 0 && (
-              <span className="w-4 h-4 rounded-full bg-slate-700 text-[10px] flex items-center justify-center text-slate-300">
-                {consoleLogs.length}
-              </span>
-            )}
+            <Send className="w-3 h-3" />
+            <span>Submit Solution</span>
           </button>
         </div>
+      )}
 
-        {/* Templates dropdown & main actions */}
-        <div className="flex items-center gap-2">
-          {/* Templates */}
-          <div className="hidden sm:flex items-center gap-1.5">
-            <span className="text-[11px] text-slate-400">Templates:</span>
-            <button
-              onClick={() => handleTemplateSelect('counter')}
-              className="text-[11px] px-2 py-1 rounded-md bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
-            >
-              Counter
-            </button>
-            <button
-              onClick={() => handleTemplateSelect('todo')}
-              className="text-[11px] px-2 py-1 rounded-md bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
-            >
-              Todo App
-            </button>
-          </div>
-
-          <button
-            onClick={handleReset}
-            title="Reset code"
-            className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
-
-          <button
-            onClick={handleSaveLocal}
-            title="Save Project"
-            className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition"
-          >
-            <Save className="w-4 h-4" />
-          </button>
-
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={runCode}
-            isLoading={isRunning}
-            icon={Play}
-            className="bg-emerald-600 hover:bg-emerald-700 shadow-emerald-900/30 font-semibold"
-          >
-            Run Code
-          </Button>
-
-          {/* Toggle AI Mentor panel */}
-          <button
-            onClick={() => setShowAIMentor(!showAIMentor)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition ${
-              showAIMentor
-                ? 'bg-brand-600 text-white'
-                : 'bg-slate-800 text-slate-300 hover:text-white'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-brand-300" />
-            <span>AI Mentor</span>
-          </button>
-
-          {/* Submit assignment button if in assignment mode */}
-          {onAssignmentSubmit && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => onAssignmentSubmit({ html: htmlCode, css: cssCode, js: jsCode })}
-            >
-              Submit Assignment
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Main split work area */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-        {/* Left: Code Editor or Console */}
-        <div className={`flex-1 flex flex-col min-w-0 ${activeTab === 'console' ? 'bg-slate-950' : 'bg-slate-900'}`}>
-          {activeTab === 'console' ? (
-            <div className="flex-1 p-4 font-mono text-xs overflow-y-auto space-y-2 text-slate-200">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800 text-slate-400">
-                <span>Playground Execution Console</span>
-                <button
-                  onClick={() => setConsoleLogs([])}
-                  className="text-[11px] hover:text-slate-200"
-                >
-                  Clear logs
-                </button>
-              </div>
-              {consoleLogs.length === 0 ? (
-                <p className="text-slate-500 italic pt-4">No console logs yet. Call console.log() in your JS to inspect output here.</p>
-              ) : (
-                consoleLogs.map((log) => (
-                  <div
-                    key={log.id}
-                    className={`flex items-start gap-2 py-1 ${
-                      log.level === 'error' ? 'text-rose-400' : 'text-emerald-400'
-                    }`}
-                  >
-                    <span className="text-[10px] text-slate-600 select-none">[{log.time}]</span>
-                    <span className="font-semibold select-none">{log.level === 'error' ? 'ERR:' : '>'}</span>
-                    <span className="whitespace-pre-wrap">{log.text}</span>
-                  </div>
-                ))
-              )}
-            </div>
-          ) : (
-            <Editor
-              height="100%"
-              language={currentEditorLang}
-              value={activeCodeContent}
-              onChange={(val) => {
-                if (activeTab === 'html') setHtmlCode(val || '');
-                else if (activeTab === 'css') setCssCode(val || '');
-                else setJsCode(val || '');
-              }}
-              theme="vs-dark"
-              options={{
-                minimap: { enabled: false },
-                fontSize: 13,
-                wordWrap: 'on',
-                scrollBeyondLastLine: false,
-                automaticLayout: true,
-                fontFamily: '"JetBrains Mono", Consolas, monospace',
-                tabSize: 2,
-              }}
-            />
-          )}
-        </div>
-
-        {/* Middle: Live Sandboxed Preview */}
-        <div className="flex-1 flex flex-col min-w-0 bg-white border-t lg:border-t-0 lg:border-l border-slate-800">
-          <div className="bg-slate-100 px-4 py-2 border-b border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-700">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              Live Browser Preview
-            </span>
-            <span className="text-[10px] text-slate-400 font-mono">Isolated Sandbox</span>
-          </div>
-          <iframe
-            ref={iframeRef}
-            title="DevAcademy Code Preview"
-            sandbox="allow-scripts"
-            className="w-full flex-1 border-none bg-white"
+      {/* Main Workspace (Explorer + Editor + Preview + AI Mentor) */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Left: File Explorer Sidebar (240px) */}
+        <div className="w-56 sm:w-60 md:w-64 shrink-0 h-full">
+          <FileExplorer
+            files={files}
+            activeFileId={activeFileId}
+            projectName={projectName}
+            onSelectFile={handleSelectFile}
+            onCreateFile={(parentId) =>
+              setNewItemModal({ isOpen: true, type: 'file', parentId })
+            }
+            onCreateFolder={(parentId) =>
+              setNewItemModal({ isOpen: true, type: 'folder', parentId })
+            }
+            onRenameItem={(item) => setRenameModal({ isOpen: true, item })}
+            onDeleteItem={(item) => setDeleteModal({ isOpen: true, item })}
           />
         </div>
 
-        {/* Right Drawer: AI Mentor Panel */}
-        {showAIMentor && (
-          <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-slate-800 bg-white h-72 lg:h-auto">
-            <AIMentorWidget
-              codeContext={`// ACTIVE CODE IN DEVACADEMY PLAYGROUND\n// HTML:\n${htmlCode}\n\n// JAVASCRIPT:\n${jsCode}\n\n// CSS:\n${cssCode}`}
-              lessonContext={assignmentTitle || "Coding Playground Exploration"}
+        {/* Center: Monaco Editor & Tabs */}
+        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+          <EditorArea
+            openFiles={openFiles}
+            activeFileId={activeFileId}
+            activeFile={activeFile}
+            onSelectTab={handleSelectTab}
+            onCloseTab={handleCloseTab}
+            onCodeChange={handleCodeChange}
+            onSave={handleSave}
+            onCursorChange={setCursorPosition}
+            editorSettings={settings}
+          />
+
+          {/* Bottom: Integrated Terminal Panel */}
+          <TerminalPanel
+            terminalLogs={terminalLogs}
+            consoleLogs={consoleLogs}
+            outputLogs={outputLogs}
+            isOpen={showTerminal}
+            onToggle={() => setShowTerminal(!showTerminal)}
+            onClear={handleClearLogs}
+            onRunCommand={handleRunCommand}
+            isPythonRunning={isPythonRunning}
+            pythonStatus={pythonStatus}
+          />
+        </div>
+
+        {/* Right Split: Live Web Preview Panel */}
+        {showPreview && (
+          <div className="w-[45%] min-w-[320px] max-w-[60%] shrink-0 h-full hidden md:flex flex-col">
+            <PreviewPanel
+              key={previewKey}
+              files={files}
+              onClose={() => setShowPreview(false)}
+              isRunning={false}
+              onRefresh={() => setPreviewKey((k) => k + 1)}
             />
           </div>
         )}
+
+        {/* Right Dock: DevAcademy AI Mentor Assistant */}
+        {showAIMentor && (
+          <div className="w-80 shrink-0 h-full border-l border-slate-700 bg-slate-900 flex flex-col z-20 shadow-2xl">
+            <div className="h-9 px-3 bg-[#252526] border-b border-[#1e1e1e] flex items-center justify-between text-xs text-white">
+              <div className="flex items-center gap-1.5 font-bold">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>DevAcademy AI Mentor</span>
+              </div>
+              <button
+                onClick={() => setShowAIMentor(false)}
+                className="p-1 rounded text-slate-400 hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <AIMentorWidget
+                codeContext={activeFile ? `[File: ${activeFile.name}]\n${activeFile.content}` : ''}
+                lessonContext={projectName}
+                className="h-full border-0 rounded-none shadow-none"
+              />
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* VS Code / Antigravity Bottom Status Bar */}
+      <StatusBar
+        activeFile={activeFile}
+        cursorPosition={cursorPosition}
+        pyodideReady={pyodideReady}
+        isPython={isPython}
+        errorCount={consoleLogs.filter((l) => l.level === 'error').length}
+      />
+
+      {/* Modals */}
+      <NewItemModal
+        isOpen={newItemModal.isOpen}
+        type={newItemModal.type}
+        folders={folderList}
+        defaultParentId={newItemModal.parentId}
+        onClose={() => setNewItemModal({ isOpen: false, type: 'file', parentId: null })}
+        onSubmit={handleCreateItemSubmit}
+      />
+
+      <RenameModal
+        isOpen={renameModal.isOpen}
+        item={renameModal.item}
+        onClose={() => setRenameModal({ isOpen: false, item: null })}
+        onSubmit={handleRenameItemSubmit}
+      />
+
+      <DeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        item={deleteModal.item}
+        onClose={() => setDeleteModal({ isOpen: false, item: null })}
+        onConfirm={handleDeleteItemSubmit}
+      />
+
+      <IDESettingsModal
+        isOpen={settingsModalOpen}
+        settings={settings}
+        onClose={() => setSettingsModalOpen(false)}
+        onUpdateSettings={handleUpdateSettings}
+      />
+
+      <TemplatesModal
+        isOpen={templatesModalOpen}
+        onClose={() => setTemplatesModalOpen(false)}
+        onLoadTemplate={handleLoadTemplate}
+        savedProjects={savedProjects}
+        onLoadSavedProject={handleLoadSavedProject}
+        onDeleteSavedProject={handleDeleteSavedProject}
+      />
     </div>
   );
 }

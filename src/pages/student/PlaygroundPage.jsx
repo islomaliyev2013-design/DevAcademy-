@@ -7,10 +7,10 @@ export function PlaygroundPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Interactive Code Playground
+            DevAcademy Online IDE & Code Playground
           </h1>
           <p className="text-xs sm:text-sm text-slate-500">
-            Write HTML, modern CSS, and JavaScript. Run code in an isolated sandbox with real-time AI guidance.
+            Professional development environment inspired by Antigravity IDE & VS Code. Multi-file tree explorer, Monaco editor, real Python backend execution, and live HTML/CSS/JS sandbox.
           </p>
         </div>
       </div>
