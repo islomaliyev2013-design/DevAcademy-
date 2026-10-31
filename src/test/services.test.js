@@ -86,4 +86,30 @@ describe('Data Service Business Logic', () => {
     expect(attempt.passed).toBe(true);
     expect(attempt.score_percent).toBe(100);
   });
+
+  it('should guarantee complete account isolation between Bobur and Ilhom', async () => {
+    const boburId = 'user-student-bobur';
+    const ilhomId = 'user-student-ilhom';
+
+    // Bobur enrolls and completes a lesson
+    await dataService.enrollInCourse(boburId, 'course-react-arch');
+    await dataService.markLessonComplete(boburId, 'lesson-react-1', 'course-react-arch', 25);
+
+    // Bobur has data
+    const boburEnrollments = await dataService.getEnrollments(boburId);
+    const boburAchievements = await dataService.getStudentAchievements(boburId);
+    expect(boburEnrollments.length).toBe(1);
+    expect(boburAchievements.length).toBe(1);
+
+    // Ilhom queries his own data - must be strictly 0!
+    const ilhomEnrollments = await dataService.getEnrollments(ilhomId);
+    const ilhomProgress = await dataService.getLessonProgress(ilhomId, 'course-react-arch');
+    const ilhomAchievements = await dataService.getStudentAchievements(ilhomId);
+    const ilhomActivity = dataService.getUserActivity(ilhomId, 0);
+
+    expect(ilhomEnrollments.length).toBe(0);
+    expect(ilhomProgress.length).toBe(0);
+    expect(ilhomAchievements.length).toBe(0);
+    expect(ilhomActivity.every((d) => d.xp === 0 && d.minutes === 0)).toBe(true);
+  });
 });

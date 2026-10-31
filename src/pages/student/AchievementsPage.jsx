@@ -46,13 +46,26 @@ export function AchievementsPage() {
     Code2,
   };
 
-  const leaderboard = [
-    { rank: 1, name: 'Elena Vance', xp: 2900, level: 15, streak: 42, role: 'admin' },
-    { rank: 2, name: 'Dr. Sarah Jenkins', xp: 1800, level: 10, streak: 18, role: 'teacher' },
-    { rank: 3, name: 'Alex Rivera', xp: profile?.xp || 480, level: profile?.level || 3, streak: profile?.streak_days || 5, role: 'student', isCurrent: true },
-    { rank: 4, name: 'Marcus Chen', xp: 410, level: 3, streak: 4, role: 'student' },
-    { rank: 5, name: 'Sophia Patel', xp: 350, level: 2, streak: 3, role: 'student' },
+  const baseUsers = [
+    { name: 'Elena Vance', xp: 2900, level: 15, streak: 42, role: 'admin' },
+    { name: 'Dr. Sarah Jenkins', xp: 1800, level: 10, streak: 18, role: 'teacher' },
+    { name: 'Marcus Chen', xp: 410, level: 3, streak: 4, role: 'student' },
+    { name: 'Sophia Patel', xp: 350, level: 2, streak: 3, role: 'student' },
+    { name: 'David Kim', xp: 120, level: 2, streak: 2, role: 'student' },
   ];
+
+  const currentUserItem = {
+    name: profile?.full_name || 'You',
+    xp: profile?.xp !== undefined ? profile.xp : 0,
+    level: profile?.level || 1,
+    streak: profile?.streak_days !== undefined ? profile.streak_days : 0,
+    role: profile?.role || 'student',
+    isCurrent: true,
+  };
+
+  const leaderboard = [...baseUsers, currentUserItem]
+    .sort((a, b) => b.xp - a.xp)
+    .map((item, idx) => ({ ...item, rank: idx + 1 }));
 
   return (
     <div className="space-y-10">

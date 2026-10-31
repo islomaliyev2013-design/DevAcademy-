@@ -5,10 +5,19 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '../../lib/validators';
 import { useAuth } from '../../features/auth/AuthContext';
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { Card } from '../../components/ui/Card';
 import { useToast } from '../../components/ui/Toast';
-import { Code2, Mail, Lock, ArrowRight, UserCheck, ShieldCheck, GraduationCap } from 'lucide-react';
+import authIllustration from '../../assets/auth_illustration.jpg';
+import {
+  Code2,
+  User,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  ShieldCheck,
+  CheckCircle2,
+  ChevronRight,
+} from 'lucide-react';
 
 export function LoginPage() {
   const { login, role } = useAuth();
@@ -16,17 +25,17 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [authError, setAuthError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: 'alex.student@devacademy.pro',
-      password: 'Password123!',
+      email: 'admin',
+      password: 'admin123',
       rememberMe: true,
     },
   });
@@ -35,149 +44,224 @@ export function LoginPage() {
     setAuthError('');
     try {
       const res = await login(values.email, values.password);
-      addToast('Welcome back to DevAcademy Pro!', 'success');
+      const userRole = res.user?.role || role || 'admin';
 
-      const userRole = res.user?.role || role || 'student';
+      addToast(`Xush kelibsiz! ${userRole.toUpperCase()} sifatida tizimga kirdingiz.`, 'success');
+
       const redirectPath =
         location.state?.from?.pathname ||
-        (userRole === 'teacher'
-          ? '/teacher/dashboard'
-          : userRole === 'admin'
+        (userRole === 'admin'
           ? '/admin/dashboard'
+          : userRole === 'teacher'
+          ? '/teacher/dashboard'
           : '/student/dashboard');
 
       navigate(redirectPath, { replace: true });
     } catch (err) {
-      setAuthError(err.message || 'Failed to authenticate. Please verify your credentials.');
+      setAuthError(err.message || 'Login yoki parol noto‘g‘ri');
     }
   };
 
-  const fillDemoAccount = (email, roleName) => {
-    setValue('email', email);
-    setValue('password', 'Password123!');
-    addToast(`Filled credentials for demo ${roleName}`, 'info');
-  };
-
   return (
-    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <Link to="/" className="inline-flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-700 to-brand-500 flex items-center justify-center text-white shadow-md">
-              <Code2 className="w-5 h-5" />
+    <div className="min-h-screen bg-gradient-to-br from-[#E0F2FE] via-[#EDE9FE] to-[#F0FDFA] flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      {/* Centered Split Glass Card */}
+      <div className="max-w-5xl w-full bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_25px_70px_-15px_rgba(59,130,246,0.18)] border border-white/80 p-6 sm:p-10 lg:p-12 relative overflow-hidden">
+        
+        {/* Ambient subtle glow inside card */}
+        <div className="absolute -top-24 -left-24 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-brand-400/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
+          
+          {/* Left Column: Auth Form */}
+          <div className="lg:col-span-6 space-y-6">
+            
+            {/* Top Pill Tabs */}
+            <div className="inline-flex p-1 rounded-2xl bg-slate-100/80 border border-slate-200/60 shadow-inner max-w-full">
+              <Link
+                to="/login"
+                className="px-5 py-2 rounded-xl text-xs font-bold bg-white text-brand-600 shadow-sm transition"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/register"
+                className="px-5 py-2 rounded-xl text-xs font-medium text-slate-500 hover:text-slate-800 transition"
+              >
+                Sign Up
+              </Link>
+              <Link
+                to="/forgot-password"
+                className="px-4 py-2 rounded-xl text-xs font-medium text-slate-500 hover:text-slate-800 transition hidden sm:inline-block"
+              >
+                Password recovery
+              </Link>
             </div>
-          </Link>
-          <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-            Sign In to DevAcademy Pro
-          </h2>
-          <p className="text-xs text-slate-500">
-            Continue your coding journey, track progress, and learn with AI.
-          </p>
-        </div>
 
-        {/* Demo Fast-Login Pills */}
-        <div className="bg-lavender-50 p-3.5 rounded-2xl border border-lavender-200 space-y-2">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 text-center">
-            Instant Demo Account Fill:
-          </p>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => fillDemoAccount('alex.student@devacademy.pro', 'Student')}
-              className="px-2 py-1.5 rounded-xl bg-white hover:bg-brand-50 border border-slate-200 text-[11px] font-semibold text-slate-700 flex flex-col items-center gap-1 transition"
-            >
-              <GraduationCap className="w-3.5 h-3.5 text-brand-600" />
-              <span>Student</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => fillDemoAccount('sarah.teacher@devacademy.pro', 'Teacher')}
-              className="px-2 py-1.5 rounded-xl bg-white hover:bg-brand-50 border border-slate-200 text-[11px] font-semibold text-slate-700 flex flex-col items-center gap-1 transition"
-            >
-              <UserCheck className="w-3.5 h-3.5 text-amber-600" />
-              <span>Teacher</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => fillDemoAccount('admin@devacademy.pro', 'Admin')}
-              className="px-2 py-1.5 rounded-xl bg-white hover:bg-brand-50 border border-slate-200 text-[11px] font-semibold text-slate-700 flex flex-col items-center gap-1 transition"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-rose-600" />
-              <span>Admin</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Form Card */}
-        <Card className="p-6 sm:p-8 space-y-5">
-          {authError && (
-            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-medium">
-              {authError}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <Input
-              label="Email Address"
-              type="email"
-              placeholder="you@example.com"
-              startIcon={Mail}
-              error={errors.email?.message}
-              {...register('email')}
-            />
-
-            <div className="space-y-1">
-              <Input
-                label="Password"
-                type="password"
-                placeholder="••••••••"
-                startIcon={Lock}
-                error={errors.password?.message}
-                {...register('password')}
-              />
-              <div className="flex justify-end pt-1">
-                <Link
-                  to="/forgot-password"
-                  className="text-xs font-semibold text-brand-600 hover:text-brand-700"
-                >
-                  Forgot Password?
-                </Link>
+            {/* Brand Logo & Header */}
+            <div className="space-y-1 pt-1">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-blue-500 flex items-center justify-center text-white shadow-sm">
+                  <Code2 className="w-4 h-4" />
+                </div>
+                <span className="font-extrabold text-base tracking-tight text-slate-900">
+                  DevAcademy<span className="text-brand-600">Pro</span>
+                </span>
               </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight pt-2">
+                Sign In
+              </h2>
+              <p className="text-xs text-slate-500">
+                Kirish uchun login va parolingizni kiriting.
+              </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                id="rememberMe"
-                type="checkbox"
-                className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
-                {...register('rememberMe')}
-              />
-              <label htmlFor="rememberMe" className="text-xs text-slate-600 cursor-pointer">
-                Remember session
-              </label>
+            {authError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-medium animate-in fade-in">
+                {authError}
+              </div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              
+              {/* Login / Email Input */}
+              <div className="space-y-1 text-left">
+                <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                  Login / Email
+                </label>
+                <div className="relative rounded-2xl border border-slate-200 hover:border-slate-300 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 bg-slate-50/50 transition">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <User className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="admin yoki email"
+                    className="w-full bg-transparent pl-10 pr-4 py-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                    {...register('email')}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-xs text-rose-600 font-medium">{errors.email.message}</p>
+                )}
+              </div>
+
+              {/* Password Input */}
+              <div className="space-y-1 text-left">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    Password
+                  </label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs text-brand-600 hover:text-brand-700 font-semibold"
+                  >
+                    Forgot Password?
+                  </Link>
+                </div>
+                <div className="relative rounded-2xl border border-slate-200 hover:border-slate-300 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 bg-slate-50/50 transition">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Lock className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    className="w-full bg-transparent pl-10 pr-10 py-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                    {...register('password')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-xs text-rose-600 font-medium">{errors.password.message}</p>
+                )}
+              </div>
+
+              {/* Remember checkbox */}
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  id="rememberMe"
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                  {...register('rememberMe')}
+                />
+                <label htmlFor="rememberMe" className="text-xs text-slate-600 cursor-pointer select-none">
+                  Remember session
+                </label>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-3.5 px-6 rounded-2xl font-bold text-sm text-white bg-gradient-to-r from-blue-500 via-brand-600 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg shadow-blue-500/25 active:scale-[0.99] transition duration-200 flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                <span>{isSubmitting ? 'Signing In...' : 'Sign In'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </form>
+
+            <div className="pt-2 text-center text-xs text-slate-500">
+              Don't have an account?{' '}
+              <Link to="/register" className="font-bold text-brand-600 hover:text-brand-700">
+                Sign Up
+              </Link>
             </div>
-
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              className="w-full font-bold"
-              isLoading={isSubmitting}
-              icon={ArrowRight}
-              iconPosition="right"
-            >
-              Sign In
-            </Button>
-          </form>
-
-          <div className="pt-4 border-t border-slate-100 text-center text-xs text-slate-600">
-            Don't have an account?{' '}
-            <Link to="/register" className="font-bold text-brand-600 hover:text-brand-700">
-              Create an account
-            </Link>
           </div>
-        </Card>
+
+          {/* Right Column: 3D Illustration & Welcome Showcase */}
+          <div className="lg:col-span-6 flex flex-col items-center justify-center text-center space-y-6 lg:border-l lg:border-slate-100 lg:pl-10">
+            {/* Top Brand Emblem */}
+            <div className="space-y-2">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-brand-600 to-cyan-400 p-0.5 mx-auto shadow-md">
+                <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center text-blue-600">
+                  <Code2 className="w-7 h-7" />
+                </div>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-snug">
+                Welcome to the DevAcademy Pro{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-brand-600">
+                  ecosystem
+                </span>
+              </h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Interactive in-browser coding playground, smart AI mentorship, and curriculum for modern software engineers.
+              </p>
+            </div>
+
+            {/* 3D Illustration Image */}
+            <div className="relative w-full max-w-md rounded-2xl overflow-hidden shadow-lg border border-slate-100 group">
+              <img
+                src={authIllustration}
+                alt="DevAcademy Pro AI Learning Platform"
+                className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/30 to-transparent pointer-events-none" />
+            </div>
+
+            {/* Pagination indicator like image 2 */}
+            <div className="flex items-center gap-1.5 pt-1">
+              <span className="w-6 h-1.5 rounded-full bg-blue-600"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Floating Right Navigation Arrow like Image 2 */}
+        <button
+          onClick={() => navigate('/courses')}
+          title="Browse Courses"
+          className="hidden md:flex absolute top-1/2 -right-1 -translate-y-1/2 w-10 h-10 rounded-full bg-white text-slate-600 shadow-xl border border-slate-100 items-center justify-center hover:bg-brand-50 hover:text-brand-600 transition"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );

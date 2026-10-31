@@ -220,7 +220,70 @@ export const dataService = {
       setStored('enrollments', enrollments);
     }
 
+    // Auto-unlock First Step achievement
+    const achs = getStored('student_achievements', MOCK_STUDENT_ACHIEVEMENTS);
+    if (!achs.some((a) => a.student_id === studentId && a.achievement_id === 'ach-1')) {
+      achs.push({
+        id: 'st-ach-' + Date.now(),
+        student_id: studentId,
+        achievement_id: 'ach-1',
+        unlocked_at: new Date().toISOString(),
+      });
+      setStored('student_achievements', achs);
+    }
+
+    // Record user-specific activity
+    this.recordUserActivity(studentId, xpReward);
+
     return { completed: true, percent };
+  },
+
+  // USER ACTIVITY TRACKER (ISOLATED PER USER)
+  getUserActivity(studentId, currentXp = 0) {
+    const key = `user_activity_${studentId}`;
+    let act = getStored(key, null);
+    if (!act) {
+      if (currentXp === 0) {
+        // Completely 0 for brand new user
+        act = [
+          { day: 'Mon', xp: 0, minutes: 0 },
+          { day: 'Tue', xp: 0, minutes: 0 },
+          { day: 'Wed', xp: 0, minutes: 0 },
+          { day: 'Thu', xp: 0, minutes: 0 },
+          { day: 'Fri', xp: 0, minutes: 0 },
+          { day: 'Sat', xp: 0, minutes: 0 },
+          { day: 'Sun', xp: 0, minutes: 0 },
+        ];
+      } else {
+        // Distribute student's actual current XP
+        const slice = Math.max(1, Math.round(currentXp / 5));
+        act = [
+          { day: 'Mon', xp: 0, minutes: 0 },
+          { day: 'Tue', xp: slice, minutes: 15 },
+          { day: 'Wed', xp: slice, minutes: 20 },
+          { day: 'Thu', xp: currentXp - slice * 2, minutes: 35 },
+          { day: 'Fri', xp: 0, minutes: 0 },
+          { day: 'Sat', xp: 0, minutes: 0 },
+          { day: 'Sun', xp: 0, minutes: 0 },
+        ];
+      }
+      setStored(key, act);
+    }
+    return act;
+  },
+
+  recordUserActivity(studentId, xpEarned = 25) {
+    const key = `user_activity_${studentId}`;
+    let act = this.getUserActivity(studentId, 0);
+    // Add to today's day (e.g. Thu / today)
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const todayName = dayNames[new Date().getDay()];
+    const item = act.find((d) => d.day === todayName) || act[3];
+    if (item) {
+      item.xp += xpEarned;
+      item.minutes += 15;
+    }
+    setStored(key, act);
   },
 
   // ASSIGNMENTS & SUBMISSIONS
@@ -400,6 +463,24 @@ export const dataService = {
     };
     attempts.unshift(attempt);
     setStored('quiz_attempts', attempts);
+
+    if (xpReward) {
+      this.recordUserActivity(studentId, xpReward);
+    }
+
+    if (passed && scorePercent === 100) {
+      const achs = getStored('student_achievements', MOCK_STUDENT_ACHIEVEMENTS);
+      if (!achs.some((a) => a.student_id === studentId && a.achievement_id === 'ach-3')) {
+        achs.push({
+          id: 'st-ach-' + Date.now(),
+          student_id: studentId,
+          achievement_id: 'ach-3',
+          unlocked_at: new Date().toISOString(),
+        });
+        setStored('student_achievements', achs);
+      }
+    }
+
     return attempt;
   },
 

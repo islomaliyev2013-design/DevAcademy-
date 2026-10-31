@@ -1,0 +1,198 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <!-- Background Gradients -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="35%" stop-color="#7C3AED"/>
+      <stop offset="80%" stop-color="#5B21B6"/>
+      <stop offset="100%" stop-color="#4C1D95"/>
+    </linearGradient>
+
+    <radialGradient id="top-sheen" cx="50%" cy="15%" r="65%">
+      <stop offset="0%" stop-color="#DDD6FE" stop-opacity="0.35"/>
+      <stop offset="50%" stop-color="#A78BFA" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Orbital Swoosh Gradient -->
+    <linearGradient id="swoosh-grad" x1="15%" y1="85%" x2="85%" y2="15%">
+      <stop offset="0%" stop-color="#C4B5FD" stop-opacity="0.15"/>
+      <stop offset="30%" stop-color="#DDD6FE" stop-opacity="0.85"/>
+      <stop offset="65%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#C4B5FD" stop-opacity="0.3"/>
+    </linearGradient>
+
+    <!-- Cap Shading Gradients -->
+    <linearGradient id="cap-surface" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="70%" stop-color="#F5F3FF"/>
+      <stop offset="100%" stop-color="#EDE9FE"/>
+    </linearGradient>
+
+    <linearGradient id="cap-undercut" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#DDD6FE"/>
+      <stop offset="100%" stop-color="#C4B5FD"/>
+    </linearGradient>
+
+    <linearGradient id="skullcap-grad" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E0E7FF"/>
+    </linearGradient>
+
+    <!-- Drop Shadows and Glows -->
+    <filter id="icon-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#1E0E4E" flood-opacity="0.45"/>
+    </filter>
+
+    <filter id="element-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#3B0764" flood-opacity="0.4"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="20" flood-color="#C4B5FD" flood-opacity="0.35"/>
+    </filter>
+
+    <filter id="swoosh-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Inner Border Glow for iOS aesthetic -->
+    <linearGradient id="rim-light" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.4"/>
+      <stop offset="30%" stop-color="#C4B5FD" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#4C1D95" stop-opacity="0.25"/>
+    </linearGradient>
+
+    <clipPath id="squircle-clip">
+      <rect x="64" y="64" width="896" height="896" rx="200" ry="200"/>
+    </clipPath>
+  </defs>
+
+  <!-- App Icon Squircle Container with Soft Ambient Backdrop Shadow -->
+  <rect x="64" y="64" width="896" height="896" rx="200" ry="200" fill="#0F0926" opacity="0.2" transform="translate(0, 16)"/>
+  
+  <g clip-path="url(#squircle-clip)">
+    <!-- Base Gradient Background -->
+    <rect x="64" y="64" width="896" height="896" fill="url(#bg-grad)"/>
+
+    <!-- Lighting & Radial Depth Sheen -->
+    <rect x="64" y="64" width="896" height="896" fill="url(#top-sheen)"/>
+
+    <!-- Subtle Tech Ambient Grid or Wave Glow (Soft Ambient) -->
+    <circle cx="512" cy="512" r="420" fill="none" stroke="#A78BFA" stroke-width="1.5" stroke-opacity="0.15"/>
+    <circle cx="512" cy="512" r="320" fill="none" stroke="#C4B5FD" stroke-width="1.5" stroke-opacity="0.12" stroke-dasharray="8 12"/>
+
+    <!-- Central Branding Group with Cohesive Drop Shadow -->
+    <g filter="url(#element-glow)">
+
+      <!-- ORBITAL SWOOSH (Back Arc) -->
+      <g filter="url(#swoosh-glow)">
+        <!-- Elliptical orbit encircling the coding elements -->
+        <path d="M 230 670 
+                 C 210 610, 290 540, 480 520
+                 C 680 500, 830 550, 810 625
+                 C 790 700, 620 765, 410 770
+                 C 280 775, 235 730, 240 685"
+              fill="none" 
+              stroke="url(#swoosh-grad)" 
+              stroke-width="26" 
+              stroke-linecap="round"
+              stroke-dasharray="1600"
+              stroke-dashoffset="100"/>
+
+        <!-- Orbit Accent Ring (Inner thin high-energy loop) -->
+        <path d="M 270 660 
+                 C 260 610, 340 555, 490 538
+                 C 650 520, 770 560, 760 620
+                 C 745 680, 600 735, 430 740
+                 C 330 745, 280 710, 285 670"
+              fill="none" 
+              stroke="#FFFFFF" 
+              stroke-width="5" 
+              stroke-opacity="0.75"
+              stroke-linecap="round"/>
+
+        <!-- Orbiting Sparkle / Energy Particle Node -->
+        <circle cx="785" cy="585" r="10" fill="#FFFFFF"/>
+        <circle cx="785" cy="585" r="22" fill="#C4B5FD" opacity="0.5"/>
+      </g>
+
+      <!-- GRADUATION CAP (Upper Center) -->
+      <g id="graduation-cap">
+        <!-- Skull Cap (Underneath the Mortarboard) -->
+        <path d="M 370 380 
+                 C 370 380, 370 475, 512 475 
+                 C 654 475, 654 380, 654 380
+                 Z" 
+              fill="url(#skullcap-grad)"/>
+
+        <!-- Skull Cap Shadowed Inner Trim -->
+        <path d="M 390 395 
+                 C 400 450, 450 465, 512 465 
+                 C 574 465, 624 450, 634 395
+                 C 605 408, 555 415, 512 415
+                 C 469 415, 419 408, 390 395 Z" 
+              fill="#DDD6FE" opacity="0.6"/>
+
+        <!-- Mortarboard Lower Edge / 3D Extrusion Lip -->
+        <polygon points="230,320 512,415 794,320 794,334 512,429 230,334" fill="url(#cap-undercut)"/>
+
+        <!-- Mortarboard Diamond Top Surface -->
+        <polygon points="512,230 794,320 512,410 230,320" fill="url(#cap-surface)"/>
+
+        <!-- Center Button / Rivet -->
+        <ellipse cx="512" cy="320" rx="15" ry="11" fill="#FFFFFF"/>
+        <ellipse cx="512" cy="318" rx="10" ry="7" fill="#EDE9FE"/>
+
+        <!-- Tassel Ribbon & Fringe -->
+        <!-- Ribbon drape from center button to left edge -->
+        <path d="M 512 320 
+                 C 450 315, 375 330, 360 365 
+                 C 350 390, 362 430, 355 460" 
+              fill="none" 
+              stroke="#FFFFFF" 
+              stroke-width="9" 
+              stroke-linecap="round"/>
+
+        <!-- Tassel Ring Band -->
+        <rect x="347" y="455" width="16" height="8" rx="3" fill="#C4B5FD"/>
+
+        <!-- Tassel Hanging Bell / Fringe -->
+        <path d="M 347 463 
+                 C 343 490, 340 510, 335 520
+                 C 355 524, 370 522, 375 520
+                 C 370 510, 367 490, 363 463
+                 Z" 
+              fill="#FFFFFF"/>
+      </g>
+
+      <!-- CODING SYMBOLS </> (Positioned below the graduation cap) -->
+      <g id="coding-brackets" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round">
+        
+        <!-- Left Angle Bracket < -->
+        <path d="M 440 600 L 370 655 L 440 710" 
+              stroke-width="32" 
+              stroke-miterlimit="10"/>
+
+        <!-- Forward Slash / -->
+        <path d="M 534 570 L 490 740" 
+              stroke-width="34"/>
+
+        <!-- Right Angle Bracket > -->
+        <path d="M 584 600 L 654 655 L 584 710" 
+              stroke-width="32" 
+              stroke-miterlimit="10"/>
+
+      </g>
+
+    </g>
+
+    <!-- Premium Inner Border Sheen (iOS Chamfer / Glass Edge) -->
+    <rect x="64" y="64" width="896" height="896" rx="200" ry="200" 
+          fill="none" 
+          stroke="url(#rim-light)" 
+          stroke-width="6"/>
+
+  </g>
+</svg>

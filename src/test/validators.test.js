@@ -12,10 +12,19 @@ describe('Zod Validation Schemas', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject invalid email format', () => {
+    it('should allow username like admin', () => {
+      const valid = {
+        email: 'admin',
+        password: 'admin123',
+      };
+      const result = loginSchema.safeParse(valid);
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject empty username/email', () => {
       const invalid = {
-        email: 'invalid-email',
-        password: 'Password123!',
+        email: '',
+        password: 'admin123',
       };
       const result = loginSchema.safeParse(invalid);
       expect(result.success).toBe(false);
@@ -60,7 +69,7 @@ describe('Zod Validation Schemas', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         const issues = result.error.issues || result.error.errors;
-        expect(issues[0].message).toBe('Passwords do not match');
+        expect(issues[0].message).toBe('Parollar bir xil emas');
       }
     });
 

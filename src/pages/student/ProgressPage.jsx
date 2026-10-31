@@ -17,6 +17,7 @@ import {
 export function ProgressPage() {
   const { profile, user } = useAuth();
   const [enrollments, setEnrollments] = useState([]);
+  const [userActivity, setUserActivity] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,12 +26,13 @@ export function ProgressPage() {
       try {
         const enrs = await dataService.getEnrollments(user.id);
         setEnrollments(enrs);
+        setUserActivity(dataService.getUserActivity(user.id, profile?.xp || 0));
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, [user]);
+  }, [user, profile?.xp]);
 
   const xp = profile?.xp || 0;
   const level = profile?.level || 1;
@@ -67,7 +69,7 @@ export function ProgressPage() {
           <div className="flex items-center gap-4 bg-white/10 px-4 py-3 rounded-2xl backdrop-blur-sm border border-white/10">
             <Flame className="w-8 h-8 fill-amber-400 text-amber-400" />
             <div>
-              <p className="text-xl font-extrabold">{profile?.streak_days || 1} Days</p>
+              <p className="text-xl font-extrabold">{profile?.streak_days !== undefined ? profile.streak_days : 0} Days</p>
               <p className="text-[11px] text-brand-200 uppercase font-semibold">Active Streak</p>
             </div>
           </div>
@@ -92,7 +94,7 @@ export function ProgressPage() {
       <div className="space-y-4">
         <h3 className="font-extrabold text-slate-900 text-lg">Weekly Coding Activity</h3>
         <Card className="p-6">
-          <LearningActivityChart />
+          <LearningActivityChart data={userActivity} />
         </Card>
       </div>
 
