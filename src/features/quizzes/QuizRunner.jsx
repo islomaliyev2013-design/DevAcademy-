@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { useAuth } from '../auth/AuthContext';
+import { useLanguage } from '../../lib/i18n/LanguageContext';
 import { dataService } from '../../services/dataService';
 import { useToast } from '../../components/ui/Toast';
 import {
@@ -21,6 +22,7 @@ import {
 export function QuizRunner({ quiz, onComplete }) {
   const { user, awardXP } = useAuth();
   const { addToast } = useToast();
+  const { t, localize, language } = useLanguage();
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -103,25 +105,36 @@ export function QuizRunner({ quiz, onComplete }) {
     );
   }
 
+  const getQText = (q) => localize(q.question_text);
+  const getQOptions = (q) => {
+    if (q.options && typeof q.options === 'object' && !Array.isArray(q.options)) {
+      return q.options[language] || q.options.uz || q.options.ru || q.options.en || [];
+    }
+    return q.options || [];
+  };
+  const getQExplanation = (q) => localize(q.explanation);
+
+  const currentOptions = getQOptions(currentQ);
+
   return (
     <div className="space-y-6">
       {/* Top status */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200">
         <div>
-          <h3 className="font-bold text-slate-900 text-sm sm:text-base">{quiz.title}</h3>
+          <h3 className="font-bold text-slate-900 text-sm sm:text-base">{localize(quiz.title)}</h3>
           <p className="text-xs text-slate-500">
-            Passing score: {quiz.passing_score_percent}% • Reward: +{quiz.xp_reward} XP
+            {t('quizzes.passingScore', "O'tish bali")}: {quiz.passing_score_percent}% • {t('quizzes.reward', 'Mukofot')}: +{quiz.xp_reward} XP
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Badge variant="violet" size="md">
-            Question {currentIdx + 1} of {questions.length}
+            {t('quizzes.question', 'Savol')} {currentIdx + 1} {t('quizzes.of', 'dan')} {questions.length}
           </Badge>
           {quiz.time_limit_minutes && (
             <Badge variant="slate" size="md" className="flex items-center gap-1">
               <Clock className="w-3.5 h-3.5 text-slate-400" />
-              <span>{quiz.time_limit_minutes} mins</span>
+              <span>{quiz.time_limit_minutes} {t('quizzes.timeLimit', 'daqiqa')}</span>
             </Badge>
           )}
         </div>
@@ -146,28 +159,31 @@ export function QuizRunner({ quiz, onComplete }) {
 
           <div className="space-y-2">
             <h2 className="text-2xl font-extrabold text-slate-900">
-              {scoreResult.passed ? 'Quiz Passed with Honors!' : 'Keep Practicing!'}
+              {scoreResult.passed
+                ? t('quizzes.quizPassed', "Tabriklaymiz! Testdan muvaffaqiyatli o'tdingiz!")
+                : t('quizzes.keepPracticing', 'Yana mashq qiling!')}
             </h2>
             <p className="text-sm text-slate-600 max-w-md mx-auto">
-              You scored <strong className="text-slate-900 font-bold">{scoreResult.scorePercent}%</strong> ({scoreResult.correctCount} of {scoreResult.totalQuestions} correct). You earned{' '}
+              {t('quizzes.scored', "Siz to'plagan ball")}: <strong className="text-slate-900 font-bold">{scoreResult.scorePercent}%</strong> ({scoreResult.correctCount} / {scoreResult.totalQuestions}). {t('quizzes.earned', 'Sizga berildi')}{' '}
               <strong className="text-brand-600 font-bold">+{scoreResult.xpEarned} XP</strong>!
             </p>
           </div>
 
           <div className="flex items-center justify-center gap-3 pt-2">
             <Button variant="outline" size="md" onClick={handleRetake} icon={RotateCcw}>
-              Retake Quiz
+              {t('quizzes.retakeQuiz', 'Qayta topshirish')}
             </Button>
           </div>
 
           {/* Answer explanations list */}
           <div className="mt-8 text-left space-y-4 pt-6 border-t border-slate-200">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Review & Explanations:
+              {t('quizzes.reviewExplanations', 'Savollar tahlili va tushuntirishlar:')}
             </h4>
             {questions.map((q, idx) => {
               const userAns = selectedAnswers[q.id];
               const isCorrect = userAns === q.correct_option_index;
+              const qOpts = getQOptions(q);
 
               return (
                 <div
@@ -184,19 +200,19 @@ export function QuizRunner({ quiz, onComplete }) {
                     )}
                     <div className="space-y-1.5 flex-1">
                       <p className="text-xs font-bold text-slate-900">
-                        {idx + 1}. {q.question_text}
+                        {idx + 1}. {getQText(q)}
                       </p>
                       <p className="text-xs text-slate-700">
-                        Your answer: <strong>{q.options[userAns] || 'None selected'}</strong>
+                        {t('quizzes.yourAnswer', 'Sizning javobingiz:')} <strong>{qOpts[userAns] || '—'}</strong>
                       </p>
                       {!isCorrect && (
                         <p className="text-xs text-emerald-700">
-                          Correct answer: <strong>{q.options[q.correct_option_index]}</strong>
+                          {t('quizzes.correctAnswer', "To'g'ri javob:")} <strong>{qOpts[q.correct_option_index]}</strong>
                         </p>
                       )}
                       {q.explanation && (
                         <p className="text-xs text-slate-500 italic mt-1 pt-1 border-t border-slate-200/60">
-                          💡 {q.explanation}
+                          💡 {getQExplanation(q)}
                         </p>
                       )}
                     </div>
@@ -211,16 +227,16 @@ export function QuizRunner({ quiz, onComplete }) {
         <Card className="p-6 sm:p-8 space-y-6">
           <div className="space-y-3">
             <span className="text-xs font-bold text-brand-600 uppercase tracking-wider">
-              Question {currentIdx + 1}
+              {t('quizzes.question', 'Savol')} {currentIdx + 1}
             </span>
             <h4 className="text-lg font-bold text-slate-900 leading-snug">
-              {currentQ.question_text}
+              {getQText(currentQ)}
             </h4>
           </div>
 
           {/* Options */}
           <div className="space-y-2.5">
-            {currentQ.options.map((option, optIdx) => {
+            {currentOptions.map((option, optIdx) => {
               const isSelected = selectedAnswers[currentQ.id] === optIdx;
 
               return (
@@ -258,7 +274,7 @@ export function QuizRunner({ quiz, onComplete }) {
               onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
               icon={ArrowLeft}
             >
-              Previous
+              {t('quizzes.previous', 'Oldingi')}
             </Button>
 
             {currentIdx < questions.length - 1 ? (
@@ -269,7 +285,7 @@ export function QuizRunner({ quiz, onComplete }) {
                 icon={ArrowRight}
                 iconPosition="right"
               >
-                Next
+                {t('quizzes.next', 'Keyingi')}
               </Button>
             ) : (
               <Button
@@ -278,7 +294,7 @@ export function QuizRunner({ quiz, onComplete }) {
                 onClick={handleSubmitQuiz}
                 className="bg-emerald-600 hover:bg-emerald-700"
               >
-                Submit Answers
+                {t('quizzes.submitAnswers', 'Javoblarni topshirish')}
               </Button>
             )}
           </div>

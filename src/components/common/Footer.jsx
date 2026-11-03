@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../lib/i18n/LanguageContext';
 import { Code2, Globe, Share2, Heart, Sparkles } from 'lucide-react';
 
 export function Footer() {
+  const { t } = useLanguage();
+
   return (
     <footer className="bg-white border-t border-slate-200/80 pt-16 pb-12 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -18,7 +21,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm text-slate-600 max-w-sm leading-relaxed">
-              An interactive, AI-powered developer education platform designed to transform curious minds into industry-ready software engineers through hands-on coding, live feedback, and real projects.
+              {t('footer.about', 'An interactive, AI-powered developer education platform designed to transform curious minds into industry-ready software engineers.')}
             </p>
             <div className="flex items-center gap-3 text-slate-400 pt-2">
               <a href="#" className="p-2 rounded-lg hover:bg-slate-100 hover:text-brand-600 transition" aria-label="Global Community">
@@ -32,7 +35,9 @@ export function Footer() {
 
           {/* Column 1: Courses */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Curriculum</h4>
+            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              {t('footer.curriculum', 'Curriculum')}
+            </h4>
             <ul className="space-y-2 text-sm text-slate-600">
               <li>
                 <Link to="/courses" className="hover:text-brand-600 transition">
@@ -59,26 +64,28 @@ export function Footer() {
 
           {/* Column 2: Platform */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Platform</h4>
+            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              {t('footer.platform', 'Platform')}
+            </h4>
             <ul className="space-y-2 text-sm text-slate-600">
               <li>
                 <Link to="/student/playground" className="hover:text-brand-600 transition">
-                  Code Playground
+                  {t('footer.codePlayground', 'Code Playground')}
                 </Link>
               </li>
               <li>
                 <Link to="/student/achievements" className="hover:text-brand-600 transition">
-                  Gamification & Badges
+                  {t('footer.gamification', 'Gamification & Badges')}
                 </Link>
               </li>
               <li>
                 <Link to="/login" className="hover:text-brand-600 transition">
-                  Teacher Portal
+                  {t('footer.teacherPortal', 'Teacher Portal')}
                 </Link>
               </li>
               <li>
                 <Link to="/login" className="hover:text-brand-600 transition">
-                  Admin Analytics
+                  {t('footer.adminAnalytics', 'Admin Analytics')}
                 </Link>
               </li>
             </ul>
@@ -86,11 +93,13 @@ export function Footer() {
 
           {/* Column 3: Trust & Legal */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Resources</h4>
+            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              {t('footer.resources', 'Resources')}
+            </h4>
             <ul className="space-y-2 text-sm text-slate-600">
               <li>
                 <a href="#faq" className="hover:text-brand-600 transition">
-                  Platform FAQ
+                  {t('faq.badge', 'Savol-javoblar')}
                 </a>
               </li>
               <li>
@@ -114,9 +123,9 @@ export function Footer() {
 
         {/* Bottom copyright */}
         <div className="border-t border-slate-100 pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} DevAcademy Pro. Engineered for modern developers.</p>
+          <p>© {new Date().getFullYear()} DevAcademy Pro. {t('footer.rights', 'All rights reserved.')}</p>
           <p className="flex items-center gap-1">
-            Built with <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" /> using React, Supabase & Tailwind.
+            {t('footer.builtWith', 'Built with React, Supabase & Tailwind.')}
           </p>
         </div>
       </div>

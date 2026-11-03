@@ -483,8 +483,16 @@ export const MOCK_QUIZZES = [
     id: 'quiz-react-1',
     course_id: 'course-react-arch',
     lesson_id: 'lesson-react-1',
-    title: 'React Fundamentals Checkup',
-    description: 'Verify your knowledge of React components, props immutability, and virtual DOM rendering.',
+    title: {
+      uz: "React asoslari bo'yicha test",
+      ru: 'Проверка основ React',
+      en: 'React Fundamentals Checkup',
+    },
+    description: {
+      uz: "React komponentlari, props o'zgarmasligi va virtual DOM haqidagi bilimlaringizni sinab ko'ring.",
+      ru: 'Проверьте свои знания о компонентах React, неизменяемости props и виртуальном DOM.',
+      en: 'Verify your knowledge of React components, props immutability, and virtual DOM rendering.',
+    },
     time_limit_minutes: 10,
     passing_score_percent: 70,
     xp_reward: 60,
@@ -492,57 +500,145 @@ export const MOCK_QUIZZES = [
       {
         id: 'q1',
         order_index: 1,
-        question_text: 'What is JSX in React?',
-        options: [
-          'A syntax extension to JavaScript that looks like HTML',
-          'A new CSS preprocessor for styling',
-          'A SQL-based database query syntax',
-          'A browser server engine'
-        ],
+        question_text: {
+          uz: "React'da JSX nima?",
+          ru: 'Что такое JSX в React?',
+          en: 'What is JSX in React?',
+        },
+        options: {
+          uz: [
+            "JavaScript uchun HTML ga o'xshash sintaksis kengaytmasi",
+            'Stillar uchun yangi CSS preprotsessori',
+            "SQL asosidagi ma'lumotlar bazasi so'rov tili",
+            'Brauzer server dvigateli',
+          ],
+          ru: [
+            'Синтаксическое расширение для JavaScript, похожее на HTML',
+            'Новый препроцессор CSS для стилей',
+            'Язык запросов к базе данных на основе SQL',
+            'Серверный движок браузера',
+          ],
+          en: [
+            'A syntax extension to JavaScript that looks like HTML',
+            'A new CSS preprocessor for styling',
+            'A SQL-based database query syntax',
+            'A browser server engine',
+          ],
+        },
         correct_option_index: 0,
-        explanation: 'JSX allows you to write HTML-like markup inside a JavaScript file, which is transformed into standard JavaScript function calls.',
+        explanation: {
+          uz: "JSX sizga JavaScript faylida HTML kabi belgilash yozish imkonini beradi va u standart JS chaqiruvlariga kompilyatsiya qilinadi.",
+          ru: 'JSX позволяет писать HTML-подобную разметку внутри файлов JavaScript, которая преобразуется в стандартные вызовы функций.',
+          en: 'JSX allows you to write HTML-like markup inside a JavaScript file, which is transformed into standard JavaScript function calls.',
+        },
       },
       {
         id: 'q2',
         order_index: 2,
-        question_text: 'How should props be modified within a child component?',
-        options: [
-          'Directly by assigning this.props.x = value',
-          'Props are strictly read-only and must never be mutated',
-          'By using the delete operator on props',
-          'By calling document.setProp()'
-        ],
+        question_text: {
+          uz: "Child (bola) komponent ichida props qanday o'zgartirilishi kerak?",
+          ru: 'Как следует изменять props внутри дочернего компонента?',
+          en: 'How should props be modified within a child component?',
+        },
+        options: {
+          uz: [
+            "To'g'ridan-to'g'ri this.props.x = qiymat berish orqali",
+            "Props faqat o'qish uchun (read-only) va hech qachon o'zgartirilmasligi kerak",
+            "Props'ga nisbatan delete operatorini ishlatish orqali",
+            'document.setProp() funksiyasini chaqirish orqali',
+          ],
+          ru: [
+            'Напрямую через присвоение this.props.x = значение',
+            'Props предназначены только для чтения и никогда не должны мутироваться',
+            'С помощью оператора delete для props',
+            'Вызовом функции document.setProp()',
+          ],
+          en: [
+            'Directly by assigning this.props.x = value',
+            'Props are strictly read-only and must never be mutated',
+            'By using the delete operator on props',
+            'By calling document.setProp()',
+          ],
+        },
         correct_option_index: 1,
-        explanation: 'All React components must act as pure functions with respect to their props. Never mutate props directly.',
+        explanation: {
+          uz: "Barcha React komponentlari o'z props'lariga nisbatan sof funksiya kabi ishlashi kerak. Props'ni to'g'ridan-to'g'ri o'zgartirish qat'iyan taqiqlangan.",
+          ru: 'Все компоненты React должны быть чистыми функциями по отношению к своим props. Никогда не мутируйте props напрямую.',
+          en: 'All React components must act as pure functions with respect to their props. Never mutate props directly.',
+        },
       },
       {
         id: 'q3',
         order_index: 3,
-        question_text: 'Why does React require unique keys when rendering lists of elements?',
-        options: [
-          'To generate random CSS classes',
-          'To help React identify which items have changed, been added, or removed',
-          'To satisfy browser cookie requirements',
-          'To encrypt list items for security'
-        ],
+        question_text: {
+          uz: "Nima uchun React ro'yxat elementlarini render qilishda unikal 'key' talab qiladi?",
+          ru: 'Почему React требует уникальные ключи (key) при рендеринге списков?',
+          en: 'Why does React require unique keys when rendering lists of elements?',
+        },
+        options: {
+          uz: [
+            'Tasodifiy CSS klasslarini yaratish uchun',
+            "React qaysi element o'zgargani, qo'shilgani yoki o'chirilganini aniq bilishi uchun",
+            'Brauzer cookie talablarini qondirish uchun',
+            "Xavfsizlik maqsadida ma'lumotlarni shifrlash uchun",
+          ],
+          ru: [
+            'Для генерации случайных классов CSS',
+            'Чтобы React мог определить, какие элементы изменились, добавлены или удалены',
+            'Для удовлетворения требований cookie браузера',
+            'Для шифрования данных в целях безопасности',
+          ],
+          en: [
+            'To generate random CSS classes',
+            'To help React identify which items have changed, been added, or removed',
+            'To satisfy browser cookie requirements',
+            'To encrypt list items for security',
+          ],
+        },
         correct_option_index: 1,
-        explanation: 'Keys give React an identity for each list element, enabling efficient reconciliation and state preservation across re-renders.',
+        explanation: {
+          uz: "'Key' kalitlari React'ga har bir elementning identifikatorini beradi, bu esa Virtual DOM yangilanishini tez va to'g'ri bajarishga imkon beradi.",
+          ru: 'Ключи дают React идентификатор каждого элемента списка, обеспечивая эффективное сопоставление и сохранение состояния.',
+          en: 'Keys give React an identity for each list element, enabling efficient reconciliation and state preservation across re-renders.',
+        },
       },
       {
         id: 'q4',
         order_index: 4,
-        question_text: 'When does the useState setter re-render the component?',
-        options: [
-          'Only when the new state differs from the previous state (Object.is comparison)',
-          'Every 100 milliseconds automatically',
-          'Never unless window.reload() is called',
-          'Only in production mode'
-        ],
+        question_text: {
+          uz: "useState setter funksiyasi komponentni qachon qayta render qiladi?",
+          ru: 'Когда сеттер useState вызывает повторный рендер компонента?',
+          en: 'When does the useState setter re-render the component?',
+        },
+        options: {
+          uz: [
+            "Faqat yangi holat oldingi holatdan farq qilgandagina (Object.is taqqoslash orqali)",
+            'Har 100 millisekundda avtomatik tarzda',
+            'Hech qachon, faqat window.reload() chaqirilganda',
+            'Faqat production rejimida',
+          ],
+          ru: [
+            'Только если новое состояние отличается от предыдущего (сравнение Object.is)',
+            'Каждые 100 миллисекунд автоматически',
+            'Никогда, пока не вызван window.reload()',
+            'Только в режиме production',
+          ],
+          en: [
+            'Only when the new state differs from the previous state (Object.is comparison)',
+            'Every 100 milliseconds automatically',
+            'Never unless window.reload() is called',
+            'Only in production mode',
+          ],
+        },
         correct_option_index: 0,
-        explanation: 'React compares the new state with the previous state using Object.is. If identical, it skips re-rendering the component and its children.',
-      }
-    ]
-  }
+        explanation: {
+          uz: "React yangi holatni oldingi holat bilan Object.is orqali solishtiradi. Agar ular bir xil bo'lsa, ortiqcha qayta chizish (re-render) o'tkazib yuboriladi.",
+          ru: 'React сравнивает новое состояние с предыдущим через Object.is. Если они одинаковы, рендер пропускается.',
+          en: 'React compares the new state with the previous state using Object.is. If identical, it skips re-rendering the component and its children.',
+        },
+      },
+    ],
+  },
 ];
 
 export const MOCK_ENROLLMENTS = [

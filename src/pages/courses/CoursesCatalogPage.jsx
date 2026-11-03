@@ -3,10 +3,12 @@ import { CourseCard } from '../../features/courses/CourseCard';
 import { CourseCardSkeleton } from '../../components/ui/Skeleton';
 import { dataService } from '../../services/dataService';
 import { useAuth } from '../../features/auth/AuthContext';
+import { useLanguage } from '../../lib/i18n/LanguageContext';
 import { Search, Filter, BookOpen } from 'lucide-react';
 
 export function CoursesCatalogPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [courses, setCourses] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,12 @@ export function CoursesCatalogPage() {
     load();
   }, [user]);
 
-  const levels = ['All', 'Beginner', 'Intermediate', 'Advanced'];
+  const levels = [
+    { value: 'All', label: t('courses.allLevels', 'All Levels') },
+    { value: 'Beginner', label: t('courses.beginner', 'Beginner') },
+    { value: 'Intermediate', label: t('courses.intermediate', 'Intermediate') },
+    { value: 'Advanced', label: t('courses.advanced', 'Advanced') },
+  ];
   const categories = ['All', 'Web Development', 'React & Frontend', 'CSS & Design', 'Computer Science'];
 
   const filteredCourses = courses.filter((course) => {
@@ -48,10 +55,10 @@ export function CoursesCatalogPage() {
       {/* Title banner */}
       <div className="space-y-2">
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-          Explore Programming Courses
+          {t('courses.catalogTitle', 'Explore Programming Courses')}
         </h1>
         <p className="text-sm text-slate-500 max-w-2xl">
-          Learn real-world software engineering with interactive curriculum, live coding sandboxes, and personalized AI mentor feedback.
+          {t('courses.catalogSubtitle', 'Learn real-world software engineering with interactive curriculum, live coding sandboxes, and personalized AI mentor feedback.')}
         </p>
       </div>
 
@@ -64,7 +71,7 @@ export function CoursesCatalogPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by course title, keywords, or technology..."
+            placeholder={t('courses.searchPlaceholder', 'Search by course title, keywords, or technology...')}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white transition"
           />
         </div>
@@ -82,8 +89,8 @@ export function CoursesCatalogPage() {
             className="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-700 focus:outline-none focus:border-brand-500"
           >
             {levels.map((lvl) => (
-              <option key={lvl} value={lvl}>
-                Level: {lvl}
+              <option key={lvl.value} value={lvl.value}>
+                {lvl.label}
               </option>
             ))}
           </select>
@@ -112,9 +119,11 @@ export function CoursesCatalogPage() {
       ) : filteredCourses.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 space-y-3">
           <BookOpen className="w-12 h-12 text-slate-300 mx-auto" />
-          <h3 className="font-bold text-slate-800 text-base">No courses match your criteria</h3>
+          <h3 className="font-bold text-slate-800 text-base">
+            {t('courses.noCoursesFound', 'No courses match your criteria')}
+          </h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Try resetting your search query or adjusting your level filters to explore more topics.
+            {t('courses.clearFilters', 'Try resetting your search query or adjusting your level filters.')}
           </p>
         </div>
       ) : (

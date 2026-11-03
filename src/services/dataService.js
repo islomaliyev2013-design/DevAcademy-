@@ -423,7 +423,11 @@ export const dataService = {
       if (error) throw error;
       return data;
     }
-    const quizzes = getStored('quizzes', MOCK_QUIZZES);
+    const stored = getStored('quizzes', MOCK_QUIZZES);
+    const quizzes =
+      stored && typeof stored[0]?.questions?.[0]?.question_text === 'object'
+        ? stored
+        : MOCK_QUIZZES;
     return quizzes.filter((q) => (courseId ? q.course_id === courseId : true));
   },
 
@@ -437,7 +441,11 @@ export const dataService = {
       if (error) throw error;
       return data;
     }
-    const quizzes = getStored('quizzes', MOCK_QUIZZES);
+    const stored = getStored('quizzes', MOCK_QUIZZES);
+    const quizzes =
+      stored && typeof stored[0]?.questions?.[0]?.question_text === 'object'
+        ? stored
+        : MOCK_QUIZZES;
     return quizzes.find((q) => q.id === quizId) || null;
   },
 
