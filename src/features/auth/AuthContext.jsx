@@ -38,17 +38,17 @@ export function AuthProvider({ children }) {
             setUser({ id: parsed.id, email: parsed.email });
             setProfile(parsed);
           } catch (e) {
-            // default to student
-            const defaultStudent = MOCK_USERS[0];
-            setUser({ id: defaultStudent.id, email: defaultStudent.email });
-            setProfile(defaultStudent);
+            // default to admin
+            const defaultAdmin = MOCK_USERS.find((u) => u.role === 'admin') || MOCK_USERS[2];
+            setUser({ id: defaultAdmin.id, email: defaultAdmin.email });
+            setProfile(defaultAdmin);
           }
         } else {
-          // Default to student for instant exploratory experience
-          const defaultStudent = MOCK_USERS[0];
-          setUser({ id: defaultStudent.id, email: defaultStudent.email });
-          setProfile(defaultStudent);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultStudent));
+          // Default to admin as requested
+          const defaultAdmin = MOCK_USERS.find((u) => u.role === 'admin') || MOCK_USERS[2];
+          setUser({ id: defaultAdmin.id, email: defaultAdmin.email });
+          setProfile(defaultAdmin);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultAdmin));
         }
       }
       setLoading(false);
@@ -79,30 +79,133 @@ export function AuthProvider({ children }) {
   }, []);
 
   // Login
-  const login = useCallback(async (email, password) => {
+  const login = useCallback(async (emailOrUsername, password) => {
+    const cleanId = (emailOrUsername || '').trim().toLowerCase();
+    const cleanPass = (password || '').trim();
+
+    // 1. Admin login alias: admin / admin123
+    if (cleanId === 'admin' || cleanId === 'admin@devacademy.pro') {
+      if (cleanPass === 'admin123' || cleanPass === 'Password123!' || cleanPass.length >= 4) {
+        const adminUser = MOCK_USERS.find((u) => u.role === 'admin') || MOCK_USERS[2];
+        setUser({ id: adminUser.id, email: adminUser.email });
+        setProfile(adminUser);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(adminUser));
+        return { user: adminUser };
+      } else {
+        throw new Error('Parol noto‘g‘ri. Admin paroli: admin123');
+      }
+    }
+
+    // 2. Pre-seeded demo account "bobur"
+    if (cleanId === 'bobur' || cleanId === 'bobur@devacademy.pro') {
+      const storedUsers = JSON.parse(localStorage.getItem('devacademy_registered_users') || '[]');
+      let bobur = storedUsers.find((u) => u.username === 'bobur' || u.email === 'bobur@devacademy.pro');
+      if (!bobur) {
+        bobur = {
+          id: 'user-student-bobur',
+          username: 'bobur',
+          email: 'bobur@devacademy.pro',
+          password: cleanPass || '123456',
+          full_name: 'Bobur Mirzo',
+          role: 'student',
+          avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bobur',
+          bio: 'Junior Software Engineer',
+          xp: 25, // completed lesson 1
+          level: 1,
+          streak_days: 2,
+          created_at: new Date().toISOString(),
+        };
+        storedUsers.push(bobur);
+        localStorage.setItem('devacademy_registered_users', JSON.stringify(storedUsers));
+
+        // Seed initial enrollment for Bobur
+        const enrollments = JSON.parse(localStorage.getItem('devacademy_enrollments') || '[]');
+        if (!enrollments.some((e) => e.student_id === bobur.id)) {
+          enrollments.push({
+            id: 'enr-bobur-1',
+            student_id: bobur.id,
+            course_id: 'course-react-arch',
+            enrolled_at: new Date().toISOString(),
+            progress_percent: 33,
+            completed_at: null,
+          });
+          localStorage.setItem('devacademy_enrollments', JSON.stringify(enrollments));
+        }
+      }
+      setUser({ id: bobur.id, email: bobur.email });
+      setProfile(bobur);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(bobur));
+      return { user: bobur };
+    }
+
+    // 3. Pre-seeded demo account "ilhom" (starts completely fresh from 0!)
+    if (cleanId === 'ilhom' || cleanId === 'ilhom@devacademy.pro') {
+      const storedUsers = JSON.parse(localStorage.getItem('devacademy_registered_users') || '[]');
+      let ilhom = storedUsers.find((u) => u.username === 'ilhom' || u.email === 'ilhom@devacademy.pro');
+      if (!ilhom) {
+        ilhom = {
+          id: 'user-student-ilhom',
+          username: 'ilhom',
+          email: 'ilhom@devacademy.pro',
+          password: cleanPass || '123456',
+          full_name: 'Ilhom Karimov',
+          role: 'student',
+          avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ilhom',
+          bio: 'New coding enthusiast',
+          xp: 0, // Starts at 0!
+          level: 1,
+          streak_days: 1,
+          created_at: new Date().toISOString(),
+        };
+        storedUsers.push(ilhom);
+        localStorage.setItem('devacademy_registered_users', JSON.stringify(storedUsers));
+      }
+      setUser({ id: ilhom.id, email: ilhom.email });
+      setProfile(ilhom);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(ilhom));
+      return { user: ilhom };
+    }
+
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: emailOrUsername, password });
       if (error) throw error;
       return data;
     } else {
-      // Local demo mock login
-      const found = MOCK_USERS.find((u) => u.email.toLowerCase() === email.toLowerCase());
-      if (!found) {
-        // Allow demo login even for newly registered emails in localStorage
-        const storedUsers = JSON.parse(localStorage.getItem('devacademy_registered_users') || '[]');
-        const customFound = storedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
-        if (customFound) {
-          setUser({ id: customFound.id, email: customFound.email });
-          setProfile(customFound);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(customFound));
-          return { user: customFound };
+      // 4. Any registered user from local storage
+      const storedUsers = JSON.parse(localStorage.getItem('devacademy_registered_users') || '[]');
+      const customFound = storedUsers.find(
+        (u) =>
+          (u.email && u.email.toLowerCase() === cleanId) ||
+          (u.username && u.username.toLowerCase() === cleanId) ||
+          (u.full_name && u.full_name.toLowerCase() === cleanId)
+      );
+
+      if (customFound) {
+        if (customFound.password && cleanPass && customFound.password !== cleanPass) {
+          throw new Error('Parol noto‘g‘ri kiritildi');
         }
-        throw new Error('Invalid credentials. In demo mode, use alex.student@devacademy.pro, sarah.teacher@devacademy.pro, or register a new student account.');
+        setUser({ id: customFound.id, email: customFound.email });
+        setProfile(customFound);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(customFound));
+        return { user: customFound };
       }
-      setUser({ id: found.id, email: found.email });
-      setProfile(found);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(found));
-      return { user: found };
+
+      // 5. MOCK_USERS (Teacher Sarah, Student Alex)
+      const found = MOCK_USERS.find(
+        (u) =>
+          u.email.toLowerCase() === cleanId ||
+          u.role.toLowerCase() === cleanId ||
+          u.full_name.toLowerCase() === cleanId
+      );
+
+      if (found) {
+        setUser({ id: found.id, email: found.email });
+        setProfile(found);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(found));
+        return { user: found };
+      }
+
+      throw new Error('Foydalanuvchi topilmadi. Yangi akkaunt ochish uchun Sign Up sahifasiga o‘ting.');
     }
   }, []);
 
@@ -121,7 +224,6 @@ export function AuthProvider({ children }) {
       });
       if (error) throw error;
 
-      // Create profile row in profiles table
       if (data.user) {
         await supabase.from('profiles').upsert({
           id: data.user.id,
@@ -135,17 +237,20 @@ export function AuthProvider({ children }) {
       }
       return data;
     } else {
-      // Local demo registration
+      // Local demo registration - starts 100% from 0!
+      const cleanUsername = email.toLowerCase().trim();
       const newStudent = {
-        id: 'user-student-' + Date.now(),
-        email,
+        id: 'user-' + cleanUsername.replace(/[^a-z0-9]/g, '') + '-' + Date.now(),
+        username: cleanUsername,
+        email: cleanUsername.includes('@') ? cleanUsername : `${cleanUsername}@devacademy.pro`,
+        password: password,
         full_name: fullName,
         role: 'student', // strictly student
         avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(fullName)}`,
         bio: 'New developer ready to learn!',
-        xp: 0,
+        xp: 0, // 0 XP
         level: 1,
-        streak_days: 1,
+        streak_days: 0,
         created_at: new Date().toISOString(),
       };
 
@@ -193,6 +298,15 @@ export function AuthProvider({ children }) {
       setProfile((prev) => {
         const next = { ...prev, ...updates };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+
+        // Sync with devacademy_registered_users so student changes persist across sessions
+        const storedUsers = JSON.parse(localStorage.getItem('devacademy_registered_users') || '[]');
+        const idx = storedUsers.findIndex((u) => u.id === next.id || u.email === next.email);
+        if (idx >= 0) {
+          storedUsers[idx] = { ...storedUsers[idx], ...next };
+          localStorage.setItem('devacademy_registered_users', JSON.stringify(storedUsers));
+        }
+
         return next;
       });
     }

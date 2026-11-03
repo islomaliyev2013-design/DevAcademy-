@@ -29,28 +29,36 @@ export function StudentDashboardPage() {
   const [assignments, setAssignments] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
   const [recommended, setRecommended] = useState([]);
+  const [achievementsCount, setAchievementsCount] = useState(0);
+  const [totalAchievements, setTotalAchievements] = useState(5);
+  const [userActivity, setUserActivity] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadDashboard() {
       if (!user) return;
       try {
-        const [enrs, assigns, qzs, allCourses] = await Promise.all([
+        const [enrs, assigns, qzs, allCourses, studentAchs, allAchs] = await Promise.all([
           dataService.getEnrollments(user.id),
           dataService.getAssignments(),
           dataService.getQuizzes(),
           dataService.getCourses(),
+          dataService.getStudentAchievements(user.id),
+          dataService.getAchievements(),
         ]);
         setEnrollments(enrs);
         setAssignments(assigns.slice(0, 2));
         setQuizzes(qzs.slice(0, 2));
         setRecommended(allCourses.filter((c) => !enrs.some((e) => e.course_id === c.id)).slice(0, 2));
+        setAchievementsCount(studentAchs.length);
+        setTotalAchievements(allAchs.length || 5);
+        setUserActivity(dataService.getUserActivity(user.id, profile?.xp || 0));
       } finally {
         setLoading(false);
       }
     }
     loadDashboard();
-  }, [user]);
+  }, [user, profile?.xp]);
 
   const activeEnrollment = enrollments[0];
 
@@ -68,8 +76,12 @@ export function StudentDashboardPage() {
               {t('dashboard.welcomeBack', 'Welcome back')}, {profile?.full_name?.split(' ')[0] || 'Student'}! 👋
             </h1>
             <p className="text-xs sm:text-sm text-brand-200 max-w-xl">
+<<<<<<< HEAD
               {t('dashboard.readyToLearn', 'Ready to master new concepts today?')} (
               <strong className="text-amber-300 font-bold">{profile?.streak_days || 1} {t('common.streak', 'day streak')}</strong>)
+=======
+              You are on a <strong className="text-amber-300 font-bold">{profile?.streak_days !== undefined ? profile.streak_days : 0}-day learning streak</strong>. Keep coding to reach your next milestone!
+>>>>>>> 4b5a428f2becd11a4c4167457cde1d72e0e673fb
             </p>
           </div>
 
@@ -105,8 +117,13 @@ export function StudentDashboardPage() {
             <Flame className="w-6 h-6 fill-amber-500 text-amber-500" />
           </div>
           <div>
+<<<<<<< HEAD
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('dashboard.currentStreak', 'Active Streak')}</p>
             <p className="text-2xl font-extrabold text-slate-900">{profile?.streak_days || 1} {t('common.days', 'Days')}</p>
+=======
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Streak</p>
+            <p className="text-2xl font-extrabold text-slate-900">{profile?.streak_days !== undefined ? profile.streak_days : 0} Days</p>
+>>>>>>> 4b5a428f2becd11a4c4167457cde1d72e0e673fb
           </div>
         </Card>
 
@@ -125,8 +142,13 @@ export function StudentDashboardPage() {
             <Award className="w-6 h-6" />
           </div>
           <div>
+<<<<<<< HEAD
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('dashboard.certificatesEarned', 'Badges Unlocked')}</p>
             <p className="text-2xl font-extrabold text-slate-900">2 / 5</p>
+=======
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Badges Unlocked</p>
+            <p className="text-2xl font-extrabold text-slate-900">{achievementsCount} / {totalAchievements}</p>
+>>>>>>> 4b5a428f2becd11a4c4167457cde1d72e0e673fb
           </div>
         </Card>
       </div>
@@ -201,7 +223,7 @@ export function StudentDashboardPage() {
           </div>
 
           <Card className="p-6">
-            <LearningActivityChart />
+            <LearningActivityChart data={userActivity} />
           </Card>
         </div>
       </div>

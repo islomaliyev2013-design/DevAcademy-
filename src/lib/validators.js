@@ -2,25 +2,21 @@ import { z } from 'zod';
 
 // Auth validation schemas
 export const loginSchema = z.object({
-  email: z.string().min(1, 'Email is required').email('Invalid email address format'),
-  password: z.string().min(6, 'Password must be at least 6 characters long'),
+  email: z.string().min(1, 'Username or email is required'),
+  password: z.string().min(1, 'Password is required'),
   rememberMe: z.boolean().optional(),
 });
 
 export const registerSchema = z.object({
-  fullName: z.string().min(2, 'Full name must be at least 2 characters'),
-  email: z.string().min(1, 'Email is required').email('Invalid email address format'),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number'),
-  confirmPassword: z.string().min(1, 'Please confirm your password'),
+  fullName: z.string().min(2, 'Ism kamida 2 ta belgidan iborat bo‘lsin'),
+  email: z.string().min(2, 'Login yoki email kiritilishi shart'),
+  password: z.string().min(4, 'Parol kamida 4 ta belgidan iborat bo‘lsin'),
+  confirmPassword: z.string().min(1, 'Parolni tasdiqlang'),
   terms: z.boolean().refine((val) => val === true, {
-    message: 'You must agree to the Terms of Service & Privacy Policy',
+    message: 'Foydalanish shartlariga rozilik bildirishingiz kerak',
   }),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
+  message: "Parollar bir xil emas",
   path: ['confirmPassword'],
 });
 
